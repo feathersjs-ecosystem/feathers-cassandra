@@ -8,11 +8,11 @@ https://github.com/feathersjs/feathers-sequelize
 ## Installation
 
 ```bash
-npm install ffeathers-express-cassandra --save
+npm install feathers-express-cassandra --save
 ```
 
 ## Documentation
-COMING SOON
+Look at example folder
 
 ## License
 
