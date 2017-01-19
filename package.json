@@ -1,10 +1,10 @@
 {
   "name": "feathers-express-cassandra",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A Feathers service adapter for the Cassandra ORM (express-cassandra)",
-  "main": "index.js",
+  "main": "lib/",
   "directories": {
-    "example": "example"
+    "lib": "lib"
   },
   "dependencies": {
     "cassandra-driver": "^3.2.0",
@@ -39,6 +39,14 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/asplogic/feathers-express-cassandra.git"
+  },
+  "semistandard": {
+    "env": [
+      "mocha"
+    ],
+    "ignore": [
+      "/lib"
+    ]
   },
   "keywords": [
     "feathers",
