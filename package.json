@@ -1,6 +1,6 @@
 {
   "name": "feathers-express-cassandra",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A Feathers service adapter for the Cassandra ORM (express-cassandra)",
   "main": "lib/",
   "directories": {
@@ -36,7 +36,6 @@
   "scripts": {
     "prepublish": "npm run compile",
     "publish": "git push origin --tags && npm run changelog && git push origin",
-    "changelog": "github_changelog_generator && git add CHANGELOG.md && git commit -am \"Updating changelog\"",
     "release:patch": "npm version patch && npm publish",
     "release:minor": "npm version minor && npm publish",
     "release:major": "npm version major && npm publish",
