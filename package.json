@@ -1,6 +1,6 @@
 {
   "name": "feathers-express-cassandra",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "A Feathers service adapter for the Cassandra ORM (express-cassandra)",
   "main": "lib/",
   "directories": {
