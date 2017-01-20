@@ -101,7 +101,7 @@ class Service {
     }
     */
 
-    return new this.Model(data).saveAsync(data, options)
+    return new this.Model(data).saveAsync()
       .then(select(params, this.id))
       .catch(utils.errorHandler);
   }
@@ -121,7 +121,7 @@ class Service {
       where[this.id] = id;
     }
 
-    const options = Object.assign({}, params.sequelize, { where });
+    const options = Object.assign({}, params.cassandra, { where });
 
     return ids
       .then(idList => {
@@ -158,7 +158,7 @@ class Service {
   }
 
   update (id, data, params) {
-    const options = Object.assign({}, params.sequelize);
+    const options = Object.assign({}, params.cassandra);
 
     if (Array.isArray(data)) {
       return Promise.reject('Not replacing multiple records. Did you mean `patch`?');
