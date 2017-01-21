@@ -4,7 +4,6 @@ import filter from 'feathers-query-filters';
 import errors from 'feathers-errors';
 import { select } from 'feathers-commons';
 import * as utils from './utils';
-const CassandraTypes = require('cassandra-driver').types;
 
 class Service {
   constructor (options) {
@@ -44,8 +43,9 @@ class Service {
     options.fetchSize = filters.$limit;
 
     return this.Model.eachRowAsync(where, options, function(n, row){
-      // invoked per each row in all the pages
-      rows.push(row);
+      if (row) {
+        rows.push(JSON.parse(JSON.stringify(row)));
+      }
     }).then(function(result) {
       // pageState = result.pageState;
       return rows || [];
@@ -65,7 +65,7 @@ class Service {
 
   _get (id, params) {
     var q = {};
-    q[this.id] = CassandraTypes.Uuid.fromString(id);
+    q[this.id] = id;
 
     return this.Model.findOneAsync(q, params.cassandra).then(instance => {
       if (!instance) {
@@ -94,14 +94,15 @@ class Service {
 
   create (data, params) {
     var options = params.cassandra || {};
-
     /*
     if (Array.isArray(data)) {
       return this.Model.bulkCreate(data, options).catch(utils.errorHandler);
     }
     */
 
-    return new this.Model(data).saveAsync()
+    const model = new this.Model(data);
+
+    return model.saveAsync()
       .then(select(params, this.id))
       .catch(utils.errorHandler);
   }
@@ -139,7 +140,7 @@ class Service {
     */
     // const options = Object.assign({}, params.cassandra, { where });
     var q = {};
-    q[this.id] = CassandraTypes.Uuid.fromString(id);
+    q[this.id] = id;
     return this.Model.findOneAsync(q).then(function (instance) {
       if (!instance) {
         throw new errors.NotFound(`No record found for id '${id}'`);
@@ -165,7 +166,7 @@ class Service {
     }
 
     var q = {};
-    q[this.id] = CassandraTypes.Uuid.fromString(id);
+    q[this.id] = id;
 
     return this.Model.findOneAsync(q).then(function (instance) {
       if (!instance) {
@@ -189,7 +190,7 @@ class Service {
 
   remove (id, params) {
     var q = {};
-    q[this.id] = CassandraTypes.Uuid.fromString(id);
+    q[this.id] = id;
 
     return this.Model.findOneAsync(q).then(function (instance) {
       if (!instance) {
