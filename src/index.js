@@ -101,9 +101,10 @@ class Service {
     */
 
     const model = new this.Model(data);
-
     return model.saveAsync()
-      .then(select(params, this.id))
+      .then(()=> {
+        return model;
+      })
       .catch(utils.errorHandler);
   }
 
