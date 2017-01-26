@@ -8,11 +8,11 @@ import * as utils from './utils';
 class Service {
   constructor (options) {
     if (!options) {
-      throw new Error('Sequelize options have to be provided');
+      throw new Error('Cassandra options have to be provided');
     }
 
     if (!options.Model) {
-      throw new Error('You must provide a Sequelize Model');
+      throw new Error('You must provide a Cassandra Model');
     }
 
     this.paginate = options.paginate || {};
@@ -20,6 +20,7 @@ class Service {
     this.id = options.id || 'id';
     this.events = options.events;
     this.materialized_views = options.materialized_views || [];
+    this.if_not_exist = (typeof options.if_not_exist !== 'undefined' ? options.options.if_not_exist : true);
   }
 
   extend (obj) {
@@ -30,21 +31,15 @@ class Service {
     const { filters, query } = getFilter(params.query || {});
     const where = utils.getWhere(query);
     const order = utils.getOrder(filters.$sort);
-    const materialized_view = utils.getMaterializedView(this.materialized_views, where);
-    let options = {};
-
-    if (materialized_view) {
-      options = Object.assign(options, {
-        materialized_view: materialized_view, raw: true
-      });
-    }
+    const options = utils.getMaterializedOptions({}, where, this.materialized_views);
 
     const rows = [];
     options.fetchSize = filters.$limit;
+    options.raw = true;
 
     return this.Model.eachRowAsync(where, options, function(n, row){
       if (row) {
-        rows.push(JSON.parse(JSON.stringify(row)));
+        rows.push(row);
       }
     }).then(function(result) {
       // pageState = result.pageState;
@@ -64,10 +59,9 @@ class Service {
   }
 
   _get (id, params) {
-    var q = {};
-    q[this.id] = id;
+    const {query, options} = utils.getQueryAndOptions(this.id, id, params, this.materialized_views);
 
-    return this.Model.findOneAsync(q, params.cassandra).then(instance => {
+    return this.Model.findOneAsync(query, options).then(instance => {
       if (!instance) {
         throw new errors.NotFound(`No record found for id '${id}'`);
       }
@@ -100,49 +94,21 @@ class Service {
     }
     */
 
+    let if_not_exist = (typeof options.if_not_exist !== 'undefined' ? options.if_not_exist : this.if_not_exist);
+
     const model = new this.Model(data);
-    return model.saveAsync()
+    return model.saveAsync({if_not_exist: if_not_exist})
       .then(()=> {
-        return model;
+        return model.toJSON();
       })
+      .then(select(params, this.id))
       .catch(utils.errorHandler);
   }
 
   patch (id, data, params) {
-    /*
-    const where = Object.assign({}, filter(params.query || {}).query);
-    const mapIds = page => page.data.map(current => current[this.id]);
+    const {query, options} = utils.getQueryAndOptions(this.id, id, params, this.materialized_views);
 
-    // By default we will just query for the one id. For multi patch
-    // we create a list of the ids of all items that will be changed
-    // to re-query them after the update
-    const ids = id === null ? this._find(params)
-        .then(mapIds) : Promise.resolve([ id ]);
-
-    if (id !== null) {
-      where[this.id] = id;
-    }
-
-    const options = Object.assign({}, params.cassandra, { where });
-
-    return ids
-      .then(idList => {
-        // Create a new query that re-queries all ids that
-        // were originally changed
-        const findParams = Object.assign({}, params, {
-          query: { [this.id]: { $in: idList } }
-        });
-
-        return this.Model.update(omit(data, this.id), options)
-            .then(() => this._getOrFind(id, findParams));
-      })
-      .then(select(params, this.id))
-      .catch(utils.errorHandler);
-    */
-    // const options = Object.assign({}, params.cassandra, { where });
-    var q = {};
-    q[this.id] = id;
-    return this.Model.findOneAsync(q).then(function (instance) {
+    return this.Model.findOneAsync(query, options).then(function (instance) {
       if (!instance) {
         throw new errors.NotFound(`No record found for id '${id}'`);
       }
@@ -160,16 +126,13 @@ class Service {
   }
 
   update (id, data, params) {
-    const options = Object.assign({}, params.cassandra);
+    const {query, options} = utils.getQueryAndOptions(this.id, id, params, this.materialized_views);
 
     if (Array.isArray(data)) {
       return Promise.reject('Not replacing multiple records. Did you mean `patch`?');
     }
 
-    var q = {};
-    q[this.id] = id;
-
-    return this.Model.findOneAsync(q).then(function (instance) {
+    return this.Model.findOneAsync(query, options).then(function (instance) {
       if (!instance) {
         throw new errors.NotFound(`No record found for id '${id}'`);
       }
@@ -190,10 +153,9 @@ class Service {
   }
 
   remove (id, params) {
-    var q = {};
-    q[this.id] = id;
+    const {query, options} = utils.getQueryAndOptions(this.id, id, params, this.materialized_views);
 
-    return this.Model.findOneAsync(q).then(function (instance) {
+    return this.Model.findOneAsync(query, options).then(function (instance) {
       if (!instance) {
         throw new errors.NotFound(`No record found for id '${id}'`);
       }

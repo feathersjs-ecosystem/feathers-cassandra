@@ -42,7 +42,7 @@ export function getWhere (query) {
   return where;
 }
 
-export function getMaterializedView (materialized_views, where) {
+function getMaterializedView (where, materialized_views) {
   let keys = Object.keys(where);
 
   var materialized_view = null;
@@ -57,4 +57,28 @@ export function getMaterializedView (materialized_views, where) {
   }
 
   return materialized_view;  
+}
+
+export function getMaterializedOptions(options = {}, where, materialized_views) {
+  const materialized_view = getMaterializedView(where, materialized_views);
+  if (materialized_view) {
+    options = Object.assign(options, {
+      materialized_view: materialized_view, raw: true
+    });
+  }
+  return options;
+}
+
+export function getQueryAndOptions(idField, id, params, materialized_views) {
+  let options = params.cassandra || {};
+  let q = {};
+  q[idField] = id;
+
+  if (params.query && Object.keys(params.query).length > 0) {
+    const where = utils.getWhere(params.query);
+    q = Object.assign(q, params.query)
+    options = getMaterializedOptions(options, where, materialized_views);
+  }
+  
+  return {query: q, options: options}
 }
