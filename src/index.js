@@ -20,7 +20,8 @@ class Service {
     this.id = options.id || 'id';
     this.events = options.events;
     this.materialized_views = options.materialized_views || [];
-    this.if_not_exist = (typeof options.if_not_exist !== 'undefined' ? options.options.if_not_exist : true);
+    this.if_not_exist = false;
+    this.if_not_exist = (typeof options.if_not_exist !== 'undefined' ? options.if_not_exist : this.if_not_exist);
   }
 
   extend (obj) {
@@ -98,11 +99,11 @@ class Service {
 
     const model = new this.Model(data);
     return model.saveAsync({if_not_exist: if_not_exist})
-      .then(()=> {
-        return model.toJSON();
-      })
-      .then(select(params, this.id))
-      .catch(utils.errorHandler);
+    .then(()=> {
+      return model.toJSON();
+    })
+    .then(select(params, this.id))
+    .catch(utils.errorHandler);
   }
 
   patch (id, data, params) {

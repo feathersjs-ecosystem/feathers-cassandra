@@ -75,7 +75,7 @@ export function getQueryAndOptions(idField, id, params, materialized_views) {
   q[idField] = id;
 
   if (params.query && Object.keys(params.query).length > 0) {
-    const where = utils.getWhere(params.query);
+    const where = getWhere(params.query);
     q = Object.assign(q, params.query)
     options = getMaterializedOptions(options, where, materialized_views);
   }
