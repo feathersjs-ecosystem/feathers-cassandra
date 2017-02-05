@@ -100,7 +100,7 @@ class Service {
     const model = new this.Model(data);
     return model.saveAsync({if_not_exist: if_not_exist})
     .then(()=> {
-      return model.toJSON();
+      return model;
     })
     .then(select(params, this.id))
     .catch(utils.errorHandler);
