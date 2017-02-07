@@ -36,14 +36,16 @@ class Service {
 
     const rows = [];
     options.fetchSize = filters.$limit;
-    options.raw = true;
+
+    if (filters.$limit && filters.$limit.length > 1) {
+      options.raw = true;
+    }
 
     return this.Model.eachRowAsync(where, options, function(n, row){
       if (row) {
         rows.push(row);
       }
     }).then(function(result) {
-      // pageState = result.pageState;
       return rows || [];
     }).catch(utils.errorHandler);
   }
