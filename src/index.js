@@ -61,6 +61,12 @@ class Service {
     return result;
   }
 
+  findOne (params) {
+    return this.find(params).then((results) => {
+      return (results && results.length > 0) ? results[0] : null;
+    }).catch(utils.errorHandler)
+  }
+
   _get (id, params) {
     const {query, options} = utils.getQueryAndOptions(this.id, id, params, this.materialized_views);
 
@@ -109,9 +115,10 @@ class Service {
   }
 
   patch (id, data, params) {
-    const {query, options} = utils.getQueryAndOptions(this.id, id, params, this.materialized_views);
+    const query = {};
+    query[this.id] = id;
 
-    return this.Model.findOneAsync(query, options).then(function (instance) {
+    return this.Model.findOneAsync(query).then((instance) => {
       if (!instance) {
         throw new errors.NotFound(`No record found for id '${id}'`);
       }
@@ -129,13 +136,14 @@ class Service {
   }
 
   update (id, data, params) {
-    const {query, options} = utils.getQueryAndOptions(this.id, id, params, this.materialized_views);
+    const query = {};
+    query[this.id] = id;
 
     if (Array.isArray(data)) {
       return Promise.reject('Not replacing multiple records. Did you mean `patch`?');
     }
 
-    return this.Model.findOneAsync(query, options).then(function (instance) {
+    return this.Model.findOneAsync(query).then(function (instance) {
       if (!instance) {
         throw new errors.NotFound(`No record found for id '${id}'`);
       }
