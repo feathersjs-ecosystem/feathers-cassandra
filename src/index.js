@@ -29,7 +29,7 @@ class Service {
   }
 
   _find (params, getFilter = filter) {
-    const { filters, query } = getFilter(params.query || {});
+    const { filters, query } = getFilter(params.query || params);
     const where = utils.getWhere(query);
     const order = utils.getOrder(filters.$sort);
     const options = utils.getMaterializedOptions({}, where, this.materialized_views);
