@@ -22,6 +22,7 @@ class Service {
     this.materialized_views = options.materialized_views || [];
     this.if_not_exist = false;
     this.if_not_exist = (typeof options.if_not_exist !== 'undefined' ? options.if_not_exist : this.if_not_exist);
+    this.cassandraClient = options.cassandraClient || null;
   }
 
   extend (obj) {
@@ -97,11 +98,28 @@ class Service {
 
   create (data, params) {
     var options = params.cassandra || {};
-    /*
+
     if (Array.isArray(data)) {
-      return this.Model.bulkCreate(data, options).catch(utils.errorHandler);
+      if (!this.cassandraClient) {
+        return utils.errorHandler(new errors.NotImplemented('Pass `cassandraClient` to the service options to enable bulk create'));
+      }
+
+      const queries = [];
+
+      for (const entity of data) {
+        queries.push((new this.Model(entity)).save({ return_query: true }));
+      }
+
+      return new Promise((resolve, reject) => {
+        this.cassandraClient.doBatch(queries, (err) => {
+          if (err) {
+            return reject(err);
+          }
+
+          resolve({});
+        });
+      }).catch(utils.errorHandler);
     }
-    */
 
     let if_not_exist = (typeof options.if_not_exist !== 'undefined' ? options.if_not_exist : this.if_not_exist);
 
