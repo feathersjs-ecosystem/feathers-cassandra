@@ -37,6 +37,7 @@ class Service {
 
     const rows = [];
     options.fetchSize = filters.$limit;
+    options.allow_filtering = params.query.$allowFiltering;
 
     if (filters.$limit && filters.$limit.length > 1) {
       options.raw = true;
