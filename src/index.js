@@ -22,6 +22,8 @@ class Service {
     this.materialized_views = options.materialized_views || [];
     this.if_not_exist = false;
     this.if_not_exist = (typeof options.if_not_exist !== 'undefined' ? options.if_not_exist : this.if_not_exist);
+    this.ttl = 0;
+    this.ttl = (typeof options.ttl !== 'undefined' ? options.ttl : this.ttl);
     this.cassandraClient = options.cassandraClient || null;
   }
 
@@ -123,9 +125,10 @@ class Service {
     }
 
     let if_not_exist = (typeof options.if_not_exist !== 'undefined' ? options.if_not_exist : this.if_not_exist);
+    let ttl = (typeof options.ttl !== 'undefined' ? options.ttl : this.ttl);
 
     const model = new this.Model(data);
-    return model.saveAsync({if_not_exist: if_not_exist})
+    return model.saveAsync({ if_not_exist: if_not_exist, ttl: ttl })
     .then(()=> {
       return model;
     })
