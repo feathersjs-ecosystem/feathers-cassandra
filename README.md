@@ -1,4 +1,4 @@
-# feathers-express-cassandra
+# feathers-cassandra
 
 > A service adapter for [Cassandra](https://github.com/masumsoft/express-cassandra), a Cassandra ORM
 
@@ -8,7 +8,7 @@ https://github.com/feathersjs/feathers-sequelize
 ## Installation
 
 ```bash
-npm install feathers-express-cassandra --save
+npm install --save feathers-cassandra
 ```
 
 ## Documentation
