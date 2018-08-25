@@ -1,6 +1,6 @@
 {
-  "name": "feathers-express-cassandra",
-  "version": "0.3.1",
+  "name": "feathers-cassandra",
+  "version": "0.0.1",
   "description": "A Feathers service adapter for the Cassandra ORM (express-cassandra)",
   "main": "lib/",
   "directories": {
@@ -48,7 +48,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/asplogic/feathers-express-cassandra.git"
+    "url": "git://github.com/dekelev/feathers-cassandra.git"
   },
   "semistandard": {
     "env": [
@@ -65,10 +65,10 @@
     "database",
     "db"
   ],
-  "author": "Hon Chau",
+  "author": "Dekel Barzilay",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/asplogic/feathers-express-cassandra/issues"
+    "url": "https://github.com/dekelev/feathers-cassandra/issues"
   },
-  "homepage": "https://github.com/asplogic/feathers-express-cassandra#readme"
+  "homepage": "https://github.com/dekelev/feathers-cassandra#readme"
 }
