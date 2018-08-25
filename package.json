@@ -67,7 +67,8 @@
     "cassandra",
     "express-cassandra",
     "database",
-    "db"
+    "db",
+    "orm"
   ],
   "author": "Hon Chau",
   "contributors": [
