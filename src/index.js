@@ -161,7 +161,7 @@ class Service {
     query[this.id] = id;
 
     if (Array.isArray(data)) {
-      return Promise.reject('Not replacing multiple records. Did you mean `patch`?');
+      return Promise.reject(new Error('Not replacing multiple records. Did you mean `patch`?'));
     }
 
     return this.Model.findOneAsync(query).then(function (instance) {

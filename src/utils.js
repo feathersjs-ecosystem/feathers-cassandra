@@ -51,7 +51,6 @@ function getMaterializedView (where, materializedViews) {
     materializedViews.forEach(function (mv) {
       if (_isEqual(mv.keys.sort(), keys.sort())) {
         materializedView = mv.view;
-        return;
       }
     });
   }
