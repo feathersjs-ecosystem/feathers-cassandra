@@ -1,7 +1,7 @@
 {
   "name": "feathers-cassandra",
+  "description": "A Feathers service adapter for Cassandra ORM based on Express-Cassandra",
   "version": "0.0.1",
-  "description": "A Feathers service adapter for the Cassandra ORM (express-cassandra)",
   "main": "lib/",
   "directories": {
     "lib": "lib"
@@ -50,6 +50,9 @@
     "type": "git",
     "url": "git://github.com/dekelev/feathers-cassandra.git"
   },
+  "engines": {
+    "node": ">= 6"
+  },
   "semistandard": {
     "env": [
       "mocha"
@@ -60,15 +63,22 @@
   },
   "keywords": [
     "feathers",
+    "feathersjs",
     "cassandra",
     "express-cassandra",
     "database",
     "db"
   ],
-  "author": "Dekel Barzilay",
+  "author": "Hon Chau",
+  "contributors": [
+    {
+      "name": "Dekel Barzilay",
+      "email": "dekelev@gmail.com"
+    }
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/dekelev/feathers-cassandra/issues"
   },
-  "homepage": "https://github.com/dekelev/feathers-cassandra#readme"
+  "homepage": "https://github.com/dekelev/feathers-cassandra"
 }

@@ -1,4 +1,3 @@
-import path from 'path';
 import feathers from 'feathers';
 import rest from 'feathers-rest';
 import bodyParser from 'body-parser';
@@ -6,20 +5,20 @@ import service from '../lib';
 
 const Cassandra = require('express-cassandra');
 const models = Cassandra.createClient({
-    clientOptions: {
-        contactPoints: ['127.0.0.1'],
-        protocolOptions: { port: 9042 },
-        keyspace: 'test',
-        queryOptions: {consistency: Cassandra.consistencies.one}
+  clientOptions: {
+    contactPoints: ['127.0.0.1'],
+    protocolOptions: { port: 9042 },
+    keyspace: 'test',
+    queryOptions: {consistency: Cassandra.consistencies.one}
+  },
+  ormOptions: {
+    defaultReplicationStrategy: {
+      class: 'SimpleStrategy',
+      replication_factor: 1
     },
-    ormOptions: {
-        defaultReplicationStrategy : {
-            class: 'SimpleStrategy',
-            replication_factor: 1
-        },
-        migration: 'alter',
-        createKeyspace: true
-    }
+    migration: 'alter',
+    createKeyspace: true
+  }
 });
 
 models.connect(function (err) {
@@ -27,26 +26,28 @@ models.connect(function (err) {
 });
 
 const UserModel = models.loadSchema('User', {
-  fields:{
-    user_uuid: "uuid",
-    email    : "text",
-    password : "text",
-    mobile : "text"
+  fields: {
+    user_uuid: 'uuid',
+    email: 'text',
+    password: 'text',
+    mobile: 'text'
   },
-  key: ["user_uuid"],
+  key: ['user_uuid'],
   materialized_views: {
     users_by_email: {
-        select: ["user_uuid","email","password", "mobile"],
-        key : ["email","user_uuid"],
+      select: ['user_uuid', 'email', 'password', 'mobile'],
+      key: ['email', 'user_uuid']
     },
     users_by_mobile: {
-        select: ["user_uuid","email","password", "mobile"],
-        key : ["mobile","user_uuid"],
+      select: ['user_uuid', 'email', 'password', 'mobile'],
+      key: ['mobile', 'user_uuid']
     }
   },
-  table_name: "users"
-}, function(err, user){
-  
+  table_name: 'users'
+}, function (err, user) {
+  if (err) {
+    throw err;
+  }
 });
 
 // Create a feathers instance.
@@ -68,13 +69,13 @@ app.use('/users', service({
     default: 5,
     max: 25
   },
-  id: "user_uuid",
+  id: 'user_uuid',
   materialized_views: [{
-    keys: ["email"],
-    view: "users_by_email"
-  },{
-    keys: ["mobile"],
-    view: "users_by_mobile"
+    keys: ['email'],
+    view: 'users_by_email'
+  }, {
+    keys: ['mobile'],
+    view: 'users_by_mobile'
   }]
 }));
 

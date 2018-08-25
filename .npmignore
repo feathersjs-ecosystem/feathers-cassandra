@@ -1,0 +1,12 @@
+.babelrc
+.editorconfig
+.travis.yml
+.istanbul.yml
+.idea/
+src/
+test/
+!lib/
+
+example/
+coverage/
+yarn.lock

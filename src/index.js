@@ -1,8 +1,7 @@
-import omit from 'lodash.omit';
 import Proto from 'uberproto';
 import filter from 'feathers-query-filters';
 import errors from 'feathers-errors';
-import { select } from 'feathers-commons';
+import {select} from 'feathers-commons';
 import * as utils from './utils';
 
 class Service {
@@ -32,9 +31,9 @@ class Service {
   }
 
   _find (params, getFilter = filter) {
-    const { filters, query } = getFilter(params.query || params);
+    const {filters, query} = getFilter(params.query || params);
     const where = utils.getWhere(query);
-    const order = utils.getOrder(filters.$sort);
+    // const order = utils.getOrder(filters.$sort);
     const options = utils.getMaterializedOptions({}, where, this.materialized_views);
 
     const rows = [];
@@ -45,11 +44,11 @@ class Service {
       options.raw = true;
     }
 
-    return this.Model.eachRowAsync(where, options, function(n, row){
+    return this.Model.eachRowAsync(where, options, function (n, row) {
       if (row) {
         rows.push(row);
       }
-    }).then(function(result) {
+    }).then(function (result) {
       return rows || [];
     }).catch(utils.errorHandler);
   }
@@ -68,7 +67,7 @@ class Service {
   findOne (params) {
     return this.find(params).then((results) => {
       return (results && results.length > 0) ? results[0] : null;
-    }).catch(utils.errorHandler)
+    }).catch(utils.errorHandler);
   }
 
   _get (id, params) {
@@ -81,8 +80,8 @@ class Service {
 
       return instance;
     })
-    .then(select(params, this.id))
-    .catch(utils.errorHandler);
+      .then(select(params, this.id))
+      .catch(utils.errorHandler);
   }
 
   // returns either the model intance for an id or all unpaginated
@@ -110,7 +109,7 @@ class Service {
       const queries = [];
 
       for (const entity of data) {
-        queries.push((new this.Model(entity)).save({ return_query: true }));
+        queries.push((new this.Model(entity)).save({return_query: true}));
       }
 
       return new Promise((resolve, reject) => {
@@ -124,16 +123,16 @@ class Service {
       }).catch(utils.errorHandler);
     }
 
-    let if_not_exist = (typeof options.if_not_exist !== 'undefined' ? options.if_not_exist : this.if_not_exist);
+    let ifNotExist = (typeof options.if_not_exist !== 'undefined' ? options.if_not_exist : this.if_not_exist);
     let ttl = (typeof options.ttl !== 'undefined' ? options.ttl : this.ttl);
 
     const model = new this.Model(data);
-    return model.saveAsync({ if_not_exist: if_not_exist, ttl: ttl })
-    .then(()=> {
-      return model;
-    })
-    .then(select(params, this.id))
-    .catch(utils.errorHandler);
+    return model.saveAsync({if_not_exist: ifNotExist, ttl: ttl})
+      .then(() => {
+        return model;
+      })
+      .then(select(params, this.id))
+      .catch(utils.errorHandler);
   }
 
   patch (id, data, params) {
@@ -145,16 +144,16 @@ class Service {
         throw new errors.NotFound(`No record found for id '${id}'`);
       }
 
-      Object.keys(data).forEach(function(key) {
+      Object.keys(data).forEach(function (key) {
         if (typeof instance[key] !== 'undefined') {
-          instance[key] == data[key];
+          instance[key] = data[key];
         }
       });
 
       return instance.saveAsync();
     })
-    .then(select(params, this.id))
-    .catch(utils.errorHandler);
+      .then(select(params, this.id))
+      .catch(utils.errorHandler);
   }
 
   update (id, data, params) {
@@ -181,8 +180,8 @@ class Service {
 
       return instance.saveAsync();
     })
-    .then(select(params, this.id))
-    .catch(utils.errorHandler);
+      .then(select(params, this.id))
+      .catch(utils.errorHandler);
   }
 
   remove (id, params) {
@@ -197,8 +196,8 @@ class Service {
         return {};
       });
     })
-    .then(select(params, this.id))
-    .catch(utils.errorHandler);
+      .then(select(params, this.id))
+      .catch(utils.errorHandler);
   }
 }
 

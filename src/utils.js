@@ -1,5 +1,5 @@
 import errors from 'feathers-errors';
-const _isEqual = require('lodash.isequal');
+import _isEqual from 'lodash.isequal';
 
 export function errorHandler (error) {
   let feathersError = error;
@@ -19,7 +19,7 @@ export function getOrder (sort = {}) {
   let order = [];
 
   Object.keys(sort).forEach(name =>
-    order.push([ name, parseInt(sort[name], 10) === 1 ? 'ASC' : 'DESC' ]));
+    order.push([name, parseInt(sort[name], 10) === 1 ? 'ASC' : 'DESC']));
 
   return order;
 }
@@ -42,34 +42,34 @@ export function getWhere (query) {
   return where;
 }
 
-function getMaterializedView (where, materialized_views) {
+function getMaterializedView (where, materializedViews) {
   let keys = Object.keys(where);
 
-  var materialized_view = null;
+  var materializedView = null;
 
-  if (materialized_views.length > 0 && keys.length > 0) {
-    materialized_views.forEach(function (mv) {
+  if (materializedViews.length > 0 && keys.length > 0) {
+    materializedViews.forEach(function (mv) {
       if (_isEqual(mv.keys.sort(), keys.sort())) {
-        materialized_view = mv.view;
+        materializedView = mv.view;
         return;
       }
-    })
+    });
   }
 
-  return materialized_view;  
+  return materializedView;
 }
 
-export function getMaterializedOptions(options = {}, where, materialized_views) {
-  const materialized_view = getMaterializedView(where, materialized_views);
-  if (materialized_view) {
+export function getMaterializedOptions (options = {}, where, materializedViews) {
+  const materializedView = getMaterializedView(where, materializedViews);
+  if (materializedView) {
     options = Object.assign(options, {
-      materialized_view: materialized_view, raw: true
+      materializedView: materializedView, raw: true
     });
   }
   return options;
 }
 
-export function getQueryAndOptions(idField, id, params, materialized_views) {
+export function getQueryAndOptions (idField, id, params, materializedViews) {
   let options = params.cassandra || {};
   let q = {};
   q[idField] = id;
@@ -77,8 +77,8 @@ export function getQueryAndOptions(idField, id, params, materialized_views) {
   if (params.query && Object.keys(params.query).length > 0) {
     const where = getWhere(params.query);
     q = Object.assign(q, params.query);
-    options = getMaterializedOptions(options, where, materialized_views);
+    options = getMaterializedOptions(options, where, materializedViews);
   }
-  
-  return {query: q, options: options}
+
+  return {query: q, options: options};
 }
