@@ -1,0 +1,2 @@
+--require test/prepare
+--timeout 120000

@@ -1,85 +1,105 @@
 {
   "name": "feathers-cassandra",
-  "description": "A Feathers service adapter for Cassandra ORM based on Express-Cassandra",
-  "version": "0.0.3",
-  "main": "lib/",
-  "directories": {
-    "lib": "lib"
-  },
-  "dependencies": {
-    "cassandra-driver": "^3.2.0",
-    "feathers-commons": "^0.8.4",
-    "feathers-errors": "^2.0.1",
-    "feathers-query-filters": "^2.0.0",
-    "lodash.isequal": "^4.5.0",
-    "lodash.omit": "^4.3.0",
-    "uberproto": "^2.0.4"
-  },
-  "devDependencies": {
-    "express-cassandra": "^2.2.3",
-    "babel-cli": "^6.1.2",
-    "babel-core": "^6.1.2",
-    "babel-plugin-add-module-exports": "^0.2.0",
-    "babel-plugin-transform-object-assign": "^6.1.18",
-    "babel-preset-es2015": "^6.18.0",
-    "body-parser": "^1.14.1",
-    "chai": "^4.1.2",
-    "eslint-if-supported": "^1.0.1",
-    "feathers": "^2.0.0",
-    "feathers-rest": "^1.3.0",
-    "feathers-service-tests": "^0.10.2",
-    "istanbul": "^0.4.5",
-    "mocha": "^5.2.0",
-    "rimraf": "^2.5.4",
-    "semistandard": "^12.0.1"
-  },
-  "scripts": {
-    "prepublish": "npm run compile",
-    "publish": "git push origin --tags && git push origin",
-    "release:patch": "npm version patch && npm publish",
-    "release:minor": "npm version minor && npm publish",
-    "release:major": "npm version major && npm publish",
-    "compile": "rimraf lib/ && babel -d lib/ src/",
-    "watch": "babel --watch -d lib/ src/",
-    "lint": "eslint-if-supported semistandard --fix",
-    "mocha": "mocha --opts mocha.opts --timeout 5000",
-    "test": "npm run lint && npm run coverage",
-    "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- --opts mocha.opts"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/dekelev/feathers-cassandra.git"
-  },
-  "engines": {
-    "node": ">= 6"
-  },
-  "semistandard": {
-    "env": [
-      "mocha"
-    ],
-    "ignore": [
-      "/lib"
-    ]
-  },
+  "description": "A Feathers service adapter for Cassandra based on Express-Cassandra ORM and CassanKnex query builder",
+  "version": "0.2.0",
+  "homepage": "https://github.com/dekelev/feathers-cassandra",
   "keywords": [
     "feathers",
     "feathersjs",
     "cassandra",
     "express-cassandra",
+    "cassanknex",
+    "knex",
     "database",
     "db",
-    "orm"
-  ],
-  "author": "Hon Chau",
-  "contributors": [
-    {
-      "name": "Dekel Barzilay",
-      "email": "dekelev@gmail.com"
-    }
+    "orm",
+    "model"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/dekelev/feathers-cassandra.git"
+  },
+  "author": {
+    "name": "Dekel Barzilay",
+    "email": "dekelev@gmail.com"
+  },
   "bugs": {
     "url": "https://github.com/dekelev/feathers-cassandra/issues"
   },
-  "homepage": "https://github.com/dekelev/feathers-cassandra"
+  "engines": {
+    "node": ">= 6"
+  },
+  "main": "lib/",
+  "files": [
+    "lib"
+  ],
+  "scripts": {
+    "prepare": "npm run compile",
+    "publish": "git push origin && git push origin --tags",
+    "release:patch": "npm version patch && npm publish",
+    "release:minor": "npm version minor && npm publish",
+    "release:major": "npm version major && npm publish",
+    "compile": "rimraf lib/ && babel -d lib/ src/",
+    "watch": "babel --watch -d lib/ src/",
+    "lint": "standard --fix src/**/*.js test/**/*.js --config",
+    "mocha": "mocha --opts mocha.opts",
+    "test": "npm run compile && npm run lint && npm run mocha",
+    "example": "npm run compile && babel-node example/app"
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "dependencies": {
+    "@feathersjs/commons": "^2.0.0",
+    "@feathersjs/errors": "^3.3.0",
+    "is-plain-object": "^2.0.1",
+    "lodash.isequal": "^4.5.0",
+    "uberproto": "^2.0.4"
+  },
+  "devDependencies": {
+    "@feathersjs/express": "^1.2.3",
+    "@feathersjs/feathers": "^3.1.7",
+    "await-sleep": "0.0.1",
+    "babel-cli": "^6.11.4",
+    "babel-core": "^6.26.3",
+    "babel-eslint": "^8.2.6",
+    "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-plugin-transform-class-properties": "^6.11.5",
+    "babel-plugin-transform-object-assign": "^6.8.0",
+    "babel-preset-env": "^1.7.0",
+    "body-parser": "^1.18.3",
+    "cassandra-driver": "^3.5.0",
+    "cassanknex": "git+https://github.com/dekelev/cassanknex.git#fixed",
+    "chai": "^4.1.2",
+    "express-cassandra": "^2.2.3",
+    "feathers-service-tests": "^0.10.2",
+    "mocha": "^5.2.0",
+    "mocha-prepare": "^0.1.0",
+    "rimraf": "^2.6.2",
+    "standard": "^11.0.1"
+  },
+  "peerDependencies": {
+    "cassandra-driver": "^3.5.0"
+  },
+  "babel": {
+    "plugins": [
+      "transform-object-assign",
+      "transform-class-properties",
+      "add-module-exports"
+    ],
+    "presets": [
+      [
+        "env",
+        {
+          "targets": {
+            "node": "current"
+          }
+        }
+      ]
+    ]
+  },
+  "standard": {
+    "parser": "babel-eslint"
+  }
 }
