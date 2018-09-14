@@ -187,7 +187,7 @@ function common(appProxy, errors) {
           var params = {
             query: {
               [idProp]: {
-                $in: Object.values(_ids)
+                $in: Object.keys(_ids).map(key => _ids[key])
               },
               $sort: { age: 1 }
             }
@@ -206,7 +206,7 @@ function common(appProxy, errors) {
           var params = {
             query: {
               [idProp]: {
-                $in: Object.values(_ids)
+                $in: Object.keys(_ids).map(key => _ids[key])
               },
               $sort: { age: '1' }
             }

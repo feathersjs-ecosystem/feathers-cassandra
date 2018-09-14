@@ -271,7 +271,7 @@ class Service {
         }
 
         if (parentKey === '$token') {
-          return query.tokenWhere(params.$keys, OPERATORS_MAP[Object.keys(params.$condition)[0]], Object.values(params.$condition)[0])
+          return query.tokenWhere(params.$keys, OPERATORS_MAP[Object.keys(params.$condition)[0]], params.$condition[Object.keys(params.$condition)[0]])
         }
 
         if (method === METHODS['$or']) { throw new errors.BadRequest(`\`$or\` is not supported`) }
