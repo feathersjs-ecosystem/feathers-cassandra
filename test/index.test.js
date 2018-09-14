@@ -1486,7 +1486,96 @@ describe('Feathers Cassandra service', () => {
     })
   })
 
-  describe('$ttl', () => {
+  describe('$timestamp', () => {
+    beforeEach(async () => {
+      await people
+        .create({
+          id: 5,
+          name: 'Dave',
+          age: 10
+        })
+    })
+
+    afterEach(async () => {
+      try {
+        await people.remove(5)
+      } catch (err) {}
+      try {
+        await people.remove(6)
+      } catch (err) {}
+    })
+
+    it('create with $timestamp', () => {
+      const timestamp = (Date.now() - 1000) * 1000
+
+      return people.create({
+        id: 6,
+        name: 'John',
+        age: 10
+      }, {
+        query: {
+          $timestamp: timestamp
+        }
+      }).then(() => {
+        return people.get(6, {
+          query: {
+            $select: ['writetime(name)']
+          }
+        }).then(data => {
+          expect(data).to.be.ok
+          expect(data.name_writetime.toString()).to.equal(timestamp.toString())
+        })
+      })
+    })
+
+    it('patch with $timestamp', () => {
+      const timestamp = Date.now() * 1000
+
+      return people.patch(5, {
+        name: 'John',
+        age: 10
+      }, {
+        query: {
+          $timestamp: timestamp
+        }
+      }).then(() => {
+        return people.get(5, {
+          query: {
+            $select: ['writetime(name)']
+          }
+        }).then(data => {
+          expect(data).to.be.ok
+          expect(data.name_writetime.toString()).to.equal(timestamp.toString())
+        })
+      })
+    })
+
+    it('update with $timestamp', () => {
+      const timestamp = (Date.now() * 1000).toString()
+
+      return people.update(5, {
+        name: 'John',
+        age: 10
+      }, {
+        query: {
+          $timestamp: timestamp
+        }
+      }).then(() => {
+        return people.get(5, {
+          query: {
+            $select: ['writetime(name)']
+          }
+        }).then(data => {
+          expect(data).to.be.ok
+          expect(data.name_writetime.toString()).to.equal(timestamp)
+        })
+      })
+    })
+  })
+
+  describe('$ttl', function () {
+    this.slow(6000)
+
     beforeEach(async () => {
       await people
         .create({
@@ -1512,6 +1601,39 @@ describe('Feathers Cassandra service', () => {
 
           return sleep(5000).then(() => {
             return people.get(2).then(() => {
+              throw new Error('Should never get here')
+            }).catch(function (error) {
+              expect(error).to.be.ok
+              expect(error instanceof errors.NotFound).to.be.ok
+            })
+          })
+        })
+      })
+    })
+
+    it('create with $timestamp & $ttl', () => {
+      const timestamp = Date.now() * 1000
+
+      return people.create({
+        id: 6,
+        name: 'John',
+        age: 10
+      }, {
+        query: {
+          $timestamp: timestamp,
+          $ttl: 4
+        }
+      }).then(() => {
+        return people.get(6, {
+          query: {
+            $select: ['writetime(name)']
+          }
+        }).then(data => {
+          expect(data).to.be.ok
+          expect(data.name_writetime.toString()).to.equal(timestamp.toString())
+
+          return sleep(5000).then(() => {
+            return people.get(6).then(() => {
               throw new Error('Should never get here')
             }).catch(function (error) {
               expect(error).to.be.ok
@@ -1602,129 +1724,11 @@ describe('Feathers Cassandra service', () => {
       })
     })
   })
-
-  describe('$timestamp', () => {
-    beforeEach(async () => {
-      await people
-        .create({
-          id: 5,
-          name: 'Dave',
-          age: 10
-        })
-    })
-
-    afterEach(async () => {
-      try {
-        await people.remove(5)
-      } catch (err) {}
-      try {
-        await people.remove(6)
-      } catch (err) {}
-    })
-
-    it('create with $timestamp', () => {
-      const timestamp = (Date.now() - 1000) * 1000
-
-      return people.create({
-        id: 6,
-        name: 'John',
-        age: 10
-      }, {
-        query: {
-          $timestamp: timestamp
-        }
-      }).then(() => {
-        return people.get(6, {
-          query: {
-            $select: ['writetime(name)']
-          }
-        }).then(data => {
-          expect(data).to.be.ok
-          expect(data.name_writetime.toString()).to.equal(timestamp.toString())
-        })
-      })
-    })
-
-    it('create with $timestamp & $ttl', () => {
-      const timestamp = Date.now() * 1000
-
-      return people.create({
-        id: 6,
-        name: 'John',
-        age: 10
-      }, {
-        query: {
-          $timestamp: timestamp,
-          $ttl: 4
-        }
-      }).then(() => {
-        return people.get(6, {
-          query: {
-            $select: ['writetime(name)']
-          }
-        }).then(data => {
-          expect(data).to.be.ok
-          expect(data.name_writetime.toString()).to.equal(timestamp.toString())
-
-          return sleep(5000).then(() => {
-            return people.get(6).then(() => {
-              throw new Error('Should never get here')
-            }).catch(function (error) {
-              expect(error).to.be.ok
-              expect(error instanceof errors.NotFound).to.be.ok
-            })
-          })
-        })
-      })
-    })
-
-    it('patch with $timestamp', () => {
-      const timestamp = Date.now() * 1000
-
-      return people.patch(5, {
-        name: 'John',
-        age: 10
-      }, {
-        query: {
-          $timestamp: timestamp
-        }
-      }).then(() => {
-        return people.get(5, {
-          query: {
-            $select: ['writetime(name)']
-          }
-        }).then(data => {
-          expect(data).to.be.ok
-          expect(data.name_writetime.toString()).to.equal(timestamp.toString())
-        })
-      })
-    })
-
-    it('update with $timestamp', () => {
-      const timestamp = (Date.now() * 1000).toString()
-
-      return people.update(5, {
-        name: 'John',
-        age: 10
-      }, {
-        query: {
-          $timestamp: timestamp
-        }
-      }).then(() => {
-        return people.get(5, {
-          query: {
-            $select: ['writetime(name)']
-          }
-        }).then(data => {
-          expect(data).to.be.ok
-          expect(data.name_writetime.toString()).to.equal(timestamp)
-        })
-      })
-    })
-  })
 })
 
-describe('Common functionality', () => {
+describe('Common functionality', function () {
+  this.slow(1000)
+
   it('is CommonJS compatible', () =>
     assert.strictEqual(typeof require('../lib'), 'function'))
 
@@ -1732,7 +1736,7 @@ describe('Common functionality', () => {
   base(refs.app, errors, 'people-customid', 'customid')
 })
 
-describe('Feathers Cassandra service example test', () => {
+describe('Feathers Cassandra service example test', function () {
   after(done => {
     server.close(() => done())
   })
