@@ -30,7 +30,7 @@ const truncateTables = async cassanknex => {
 }
 
 const prepare = async () => {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     function knex (app) {
       const cassandraClient = app.get('models').orm.get_system_client()
 
@@ -54,6 +54,8 @@ const prepare = async () => {
       })
     }
 
+    await sleep(5000) // wait for keyspace to be created by the Todos example app
+
     const ExpressCassandra = require('express-cassandra')
     const models = ExpressCassandra.createClient({
       clientOptions: {
@@ -68,7 +70,7 @@ const prepare = async () => {
           'replication_factor': 1
         },
         migration: 'alter',
-        createKeyspace: true
+        createKeyspace: false
       }
     })
 
