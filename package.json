@@ -44,7 +44,7 @@
     "watch": "babel --watch -d lib/ src/",
     "lint": "standard --fix src/**/*.js test/**/*.js --config",
     "mocha": "nyc mocha --opts mocha.opts",
-    "coverage": "istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
     "test": "npm run compile && npm run lint && npm run mocha",
     "example": "npm run compile && babel-node example/app"
   },
@@ -76,7 +76,6 @@
     "chai": "^4.1.2",
     "coveralls": "^3.0.2",
     "express-cassandra": "^2.2.3",
-    "istanbul": "^0.4.5",
     "mocha": "^5.2.0",
     "nyc": "^13.0.1",
     "request": "^2.88.0",

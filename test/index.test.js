@@ -329,6 +329,16 @@ describe('Feathers Cassandra service', () => {
       })
     })
 
+    it('get with partial id in string throws an error', () => {
+      return peopleRooms.update('2', { admin: false }).then(() => {
+        throw new Error('Should never get here')
+      }).catch(function (error) {
+        expect(error).to.be.ok
+        expect(error instanceof errors.BadRequest).to.be.ok
+        expect(error.message).to.equal('When using composite primary key, id must contain values for all primary keys')
+      })
+    })
+
     it('allows find queries', () => {
       return peopleRooms.find({ query: { people_id: 2, room_id: 2 } }).then(data => {
         expect(data.length).to.equal(2)
