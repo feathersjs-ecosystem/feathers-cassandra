@@ -59,7 +59,7 @@ module.exports = function (app) {
         key: '_version' // defaults to __v
       }
     },
-    namedFilters: {
+    filters: {
       completed: builder => {
         builder.where('complete', '=', true)
       }

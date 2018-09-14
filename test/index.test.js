@@ -93,9 +93,9 @@ describe('Feathers Cassandra service', () => {
       })
     })
 
-    describe('when missing namedFilters', () => {
+    describe('when missing filters', () => {
       it('sets the default to be {}', () => {
-        expect(peopleRooms.namedFilters).to.deep.equal({})
+        expect(peopleRooms.filters).to.deep.equal({})
       })
     })
   })
@@ -882,7 +882,7 @@ describe('Feathers Cassandra service', () => {
     })
   })
 
-  describe('named filters', () => {
+  describe('filters', () => {
     beforeEach(async () => {
       people.paginate = { default: 10, max: 20 }
 

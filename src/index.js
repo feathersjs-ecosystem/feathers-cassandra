@@ -91,7 +91,7 @@ class Service {
     this.events = options.events || []
     this.materializedViews = options.materializedViews || []
     this.Model = options.model
-    this.namedFilters = options.model._properties.schema.namedFilters || {}
+    this.filters = options.model._properties.schema.filters || {}
   }
 
   extend (obj) {
@@ -149,7 +149,7 @@ class Service {
     const filtersNames = filtersExpression.replace(/[^a-zA-Z0-9_,]/g, '').split(',')
 
     for (const name of filtersNames) {
-      if (name && this.namedFilters[name]) { filters.push(this.namedFilters[name]) }
+      if (name && this.filters[name]) { filters.push(this.filters[name]) }
     }
 
     for (const filter of filters) { filter(query) }

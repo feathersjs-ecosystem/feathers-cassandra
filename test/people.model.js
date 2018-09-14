@@ -52,7 +52,7 @@ module.exports = function (app) {
         options: {}
       }
     ],
-    namedFilters: {
+    filters: {
       old: builder => {
         builder.where('age', '=', 32)
       }
