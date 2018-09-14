@@ -2,18 +2,10 @@ const Proto = require('uberproto')
 const TimeUuid = require('cassandra-driver').types.TimeUuid
 const {filterQuery} = require('@feathersjs/commons')
 const errors = require('@feathersjs/errors')
+const flatten = require('arr-flatten')
 const isPlainObject = require('is-plain-object')
 const _isEqual = require('lodash.isequal')
 const errorHandler = require('./error-handler')
-
-// TODO: add tests that query, set, add & remove an item from or to list/map/set in create/update/patch, test null handling in update
-// TODO: add tests on increment/decrement a counter column in update/patch
-// TODO: add tests on hooks - return true after changing a field or return false to get error
-// TODO: add tests on automatically set createdAt & updatedAt fields, test timestamps true or object
-// TODO: add tests on versions, test versions true or object
-// TODO: add tests on selecting TTL or WRITETIME of a field
-
-// TODO: fork CassanKnex and commit changes
 
 const METHODS = {
   $or: 'orWhere', // not supported
@@ -51,11 +43,7 @@ const QUERY_OPERATORS = [
   '$ifNotExists',
   '$allowFiltering',
   '$filters',
-  '$limitPerPartition',
-  '$add',
-  '$remove',
-  '$increment',
-  '$decrement' // TODO: check if data apecial keys are needed here
+  '$limitPerPartition'
 ]
 
 const OPERATORS_MAP = {
@@ -96,9 +84,11 @@ class Service {
       throw new Error('You must provide a function that returns an initialized CassanKnex object')
     }
 
+    const id = flatten(options.model._properties.schema.key)
+
     this.options = options || {}
     this.cassanknex = options.cassanknex
-    this.id = options.id || 'id'
+    this.id = id.length === 1 ? id[0] : id
     this.keyspace = options.model.get_keyspace_name()
     this.tableName = options.model.get_table_name()
     this.idSeparator = options.idSeparator || ','
@@ -117,6 +107,8 @@ class Service {
     if (typeof id === 'object') { return this.id.map(idKey => id[idKey]) }
     if (id[0] === '[' && id[id.length - 1] === ']') { return JSON.parse(id) }
     if (id[0] === '{' && id[id.length - 1] === '}') { return Object.values(JSON.parse(id)) }
+
+    if (typeof id !== 'string' || !id.includes(this.idSeparator)) { throw new errors.BadRequest('When using composite primary key, id must contain values for all primary keys') }
 
     return id.split(this.idSeparator)
   }
@@ -326,20 +318,24 @@ class Service {
 
     // $select uses a specific find syntax, so it has to come first.
     if (filters.$select) {
+      const fieldsToRemove = []
+
       for (const field of filters.$select) {
         const ttlMatch = field.match(/ttl\((.+)\)/i)
         const writetimeMatch = field.match(/writetime\((.+)\)/i)
 
         if (ttlMatch) {
           const fieldName = ttlMatch[1]
-          q.ttl({[fieldName]: fieldName + 'TTL'}) // TODO: maybe change TTL to Ttl?
-          filters.$select.splice(filters.$select.indexOf(field), 1)
+          q.ttl({[fieldName]: fieldName + '_ttl'})
+          fieldsToRemove.push(field)
         } else if (writetimeMatch) {
           const fieldName = writetimeMatch[1]
-          q.writetime({[fieldName]: fieldName + 'Writetime'})
-          filters.$select.splice(filters.$select.indexOf(field), 1)
+          q.writetime({[fieldName]: fieldName + '_writetime'})
+          fieldsToRemove.push(field)
         }
       }
+
+      filters.$select = filters.$select.filter(val => !fieldsToRemove.includes(val))
 
       q = q.select(...filters.$select.concat(this.id))
     } else {
@@ -397,10 +393,59 @@ class Service {
     }
   }
 
+  prepareUpdateResult (data, oldData, newObject) {
+    const modelFields = this.Model._properties.schema.fields
+
+    Object.keys(data).forEach(field => {
+      const fieldType = isPlainObject(modelFields[field]) ? modelFields[field].type : modelFields[field]
+      const value = data[field]
+      const oldFieldValue = oldData[field]
+
+      if (fieldType && ['map', 'list', 'set'].includes(fieldType) && isPlainObject(value)) {
+        const methodKey = Object.keys(value)[0]
+        const fieldValue = value[methodKey]
+
+        if (methodKey === '$add') {
+          if (fieldType === 'map') {
+            newObject[field] = oldFieldValue ? Object.assign({}, oldFieldValue, fieldValue) : fieldValue
+          } else if (fieldType === 'list') {
+            newObject[field] = oldFieldValue ? oldFieldValue.concat(fieldValue) : fieldValue
+          } else if (fieldType === 'set') {
+            newObject[field] = Array.from(new Set(oldFieldValue ? oldFieldValue.concat(fieldValue) : fieldValue)).sort()
+          }
+        } else if (methodKey === '$remove' && oldFieldValue) {
+          if (fieldType === 'map') {
+            newObject[field] = oldFieldValue
+            fieldValue.forEach(prop => delete newObject[field][prop])
+
+            if (!Object.keys(newObject[field]).length) {
+              newObject[field] = null
+            }
+          } else if (fieldType === 'list' || fieldType === 'set') {
+            newObject[field] = oldFieldValue.filter(val => !fieldValue.includes(val))
+
+            if (!newObject[field].length) {
+              newObject[field] = null
+            }
+          }
+        }
+      } else if (fieldType === 'set') {
+        newObject[field] = Array.from(new Set(value)).sort()
+      } else if (fieldType === 'counter' && isPlainObject(value)) {
+        const methodKey = Object.keys(value)[0]
+        const fieldValue = value[methodKey]
+
+        if (methodKey === '$increment') {
+          newObject[field] = oldFieldValue.add(Number(fieldValue))
+        } else if (methodKey === '$decrement') {
+          newObject[field] = oldFieldValue.subtract(Number(fieldValue))
+        }
+      }
+    })
+  }
+
   exec (query) {
     return new Promise((resolve, reject) => {
-      console.log(query.cql()) // TODO: remove
-
       query.exec((err, res) => {
         if (err) return reject(err)
         resolve(res)
@@ -648,51 +693,8 @@ class Service {
           newObject[this.id] = id
         }
 
-        if (oldData) { // TODO: maybe refactor to separate method
-          Object.keys(data).forEach(field => {
-            const fieldType = isPlainObject(modelFields[field]) ? modelFields[field].type : modelFields[field]
-            const value = data[field]
-            const oldFieldValue = oldData[field]
-
-            if (fieldType && ['map', 'list', 'set'].includes(fieldType) && isPlainObject(value)) {
-              const methodKey = Object.keys(value)[0]
-              const fieldValue = value[methodKey]
-
-              if (methodKey === '$add') {
-                if (fieldType === 'map') {
-                  newObject[field] = oldFieldValue ? Object.assign({}, oldFieldValue, fieldValue) : fieldValue
-                } else if (fieldType === 'list') {
-                  newObject[field] = oldFieldValue ? oldFieldValue.concat(fieldValue) : fieldValue
-                } else if (fieldType === 'set') {
-                  newObject[field] = Array.from(new Set(oldFieldValue ? oldFieldValue.concat(fieldValue) : fieldValue)).sort()
-                }
-              } else if (methodKey === '$remove' && oldFieldValue) {
-                if (fieldType === 'map') {
-                  newObject[field] = oldFieldValue
-                  fieldValue.forEach(prop => delete newObject[field][prop])
-
-                  if (!Object.keys(newObject[field]).length) {
-                    newObject[field] = null
-                  }
-                } else if (fieldType === 'list' || fieldType === 'set') {
-                  newObject[field] = oldFieldValue.filter(val => !fieldValue.includes(val))
-
-                  if (!newObject[field].length) {
-                    newObject[field] = null
-                  }
-                }
-              }
-            } else if (fieldType === 'counter' && isPlainObject(value)) {
-              const methodKey = Object.keys(value)[0]
-              const fieldValue = value[methodKey]
-
-              if (methodKey === '$increment') {
-                newObject[field] = oldFieldValue.add(Number(fieldValue))
-              } else if (methodKey === '$decrement') {
-                newObject[field] = oldFieldValue.subtract(Number(fieldValue))
-              }
-            }
-          })
+        if (oldData) {
+          this.prepareUpdateResult(data, oldData, newObject)
         }
 
         if (params.query && params.query.$select) {
@@ -728,13 +730,13 @@ class Service {
     const afterHook = this.Model._properties.schema.after_update
     const hookOptions = this.getHookOptions(params.query)
 
-    if (beforeHook && beforeHook(params.query, data, hookOptions) === false) { throw new errors.BadRequest('Error in before_update lifecycle function') } // TODO: check if can return error message from express-cassandra Apollo errors module
+    if (beforeHook && beforeHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in before_update lifecycle function') }
 
     if (params.query && params.query.$noSelect) {
       delete params.query.$noSelect
       return this._update(id, data, params)
         .then(data => {
-          if (afterHook && afterHook(params.query, data, hookOptions) === false) { throw new errors.BadRequest('Error in after_update lifecycle function') }
+          if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function') }
           return data
         })
         .catch(errorHandler)
@@ -744,7 +746,7 @@ class Service {
       .then(oldData => {
         return this._update(id, data, params, oldData)
           .then(data => {
-            if (afterHook && afterHook(params.query, data, hookOptions) === false) { throw new errors.BadRequest('Error in after_update lifecycle function') }
+            if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function') }
             return data
           })
           .catch(errorHandler)
@@ -767,7 +769,7 @@ class Service {
     const afterHook = this.Model._properties.schema.after_update
     const hookOptions = this.getHookOptions(params.query)
 
-    if (beforeHook && beforeHook(params.query, data, hookOptions) === false) { throw new errors.BadRequest('Error in before_update lifecycle function') }
+    if (beforeHook && beforeHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in before_update lifecycle function') }
 
     let query = filterQuery(params.query || {}, {operators: QUERY_OPERATORS}).query
     const dataCopy = Object.assign({}, data)
@@ -830,7 +832,7 @@ class Service {
 
         return this.exec(q)
           .then(() => {
-            if (afterHook && afterHook(params.query, data, hookOptions) === false) { throw new errors.BadRequest('Error in after_update lifecycle function') }
+            if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function') }
 
             return params.query && params.query.$noSelect ? {} : this._find(findParams)
               .then(page => {
@@ -864,7 +866,7 @@ class Service {
     const afterHook = this.Model._properties.schema.after_delete
     const hookOptions = this.getHookOptions(params.query)
 
-    if (beforeHook && beforeHook(params.query, hookOptions) === false) { throw new errors.BadRequest('Error in before_delete lifecycle function') }
+    if (beforeHook && beforeHook(params.query, hookOptions, id) === false) { throw new errors.BadRequest('Error in before_delete lifecycle function') }
 
     params.query = Object.assign({}, params.query)
 
@@ -886,7 +888,7 @@ class Service {
     if (params.query && params.query.$noSelect) {
       return this.exec(query)
         .then(() => {
-          if (afterHook && afterHook(params.query, hookOptions) === false) { throw new errors.BadRequest('Error in after_delete lifecycle function') }
+          if (afterHook && afterHook(params.query, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_delete lifecycle function') }
           return {}
         })
         .catch(errorHandler)
@@ -897,7 +899,7 @@ class Service {
 
           return this.exec(query)
             .then(() => {
-              if (afterHook && afterHook(params.query, hookOptions) === false) { throw new errors.BadRequest('Error in after_delete lifecycle function') }
+              if (afterHook && afterHook(params.query, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_delete lifecycle function') }
 
               if (id !== null) {
                 if (items.length === 1) {

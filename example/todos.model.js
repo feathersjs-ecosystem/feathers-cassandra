@@ -83,7 +83,7 @@ module.exports = function (app) {
     },
     after_delete: function (queryObject, options) {
       return true
-    },
+    }
   }, function (err) {
     if (err) throw err
   })

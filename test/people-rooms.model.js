@@ -6,7 +6,19 @@ module.exports = function (app) {
       people_id: 'int',
       room_id: 'int',
       time: 'int',
-      admin: 'boolean'
+      admin: 'boolean',
+      teams: {
+        type: 'map',
+        typeDef: '<varchar, text>'
+      },
+      games: {
+        type: 'list',
+        typeDef: '<varchar>'
+      },
+      winners: {
+        type: 'set',
+        typeDef: '<varchar>'
+      }
     },
     key: [['people_id', 'room_id'], 'time'],
     custom_indexes: [
@@ -15,7 +27,16 @@ module.exports = function (app) {
         using: 'org.apache.cassandra.index.sasi.SASIIndex',
         options: {}
       }
-    ]
+    ],
+    options: {
+      timestamps: {
+        createdAt: 'created_at',
+        updatedAt: 'updated_at'
+      },
+      versions: {
+        key: '_version'
+      }
+    }
   }, function (err) {
     if (err) throw err
   })

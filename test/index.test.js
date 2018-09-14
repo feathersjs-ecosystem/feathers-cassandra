@@ -1,6 +1,7 @@
 /* eslint-env mocha */
 /* eslint-disable no-unused-expressions */
 const {expect} = require('chai')
+const TimeUuid = require('cassandra-driver').types.TimeUuid
 const {app, cassandraClient, people, peopleMv, peopleRooms, peopleRoomsCustomIdSeparator} = require('./prepare')
 const assert = require('assert')
 const {base, example} = require('./lib/feathers-service-tests')
@@ -271,6 +272,14 @@ describe('Feathers Cassandra service', () => {
         ])
     })
 
+    afterEach(async () => {
+      try {
+        await people().remove(1)
+        await people().remove(2)
+        await people().remove(3)
+      } catch (err) {}
+    })
+
     it('$and in query', () => {
       return people().find({query: {$and: [{name: 'Dave'}, {age: {$lt: 32}}], $allowFiltering: true}}).then(data => {
         expect(data[0].age).to.equal(23)
@@ -298,6 +307,14 @@ describe('Feathers Cassandra service', () => {
             age: 1
           }
         ])
+    })
+
+    afterEach(async () => {
+      try {
+        await people().remove(1)
+        await people().remove(2)
+        await people().remove(3)
+      } catch (err) {}
     })
 
     it('$or in query', () => {
@@ -331,6 +348,14 @@ describe('Feathers Cassandra service', () => {
             age: 1
           }
         ])
+    })
+
+    afterEach(async () => {
+      try {
+        await people().remove(1)
+        await people().remove(2)
+        await people().remove(3)
+      } catch (err) {}
     })
 
     it('$token $gt query', () => {
@@ -584,6 +609,14 @@ describe('Feathers Cassandra service', () => {
         ])
     })
 
+    afterEach(async () => {
+      try {
+        await people().remove(1)
+        await people().remove(2)
+        await people().remove(3)
+      } catch (err) {}
+    })
+
     it('can query with named filter', () => {
       return people().find({query: {$filters: 'old'}}).then(data => {
         expect(data).to.be.instanceof(Array)
@@ -617,6 +650,497 @@ describe('Feathers Cassandra service', () => {
         expect(data).to.be.instanceof(Array)
         expect(data.length).to.equal(1)
         expect(data[0].name).to.equal('Dada')
+      })
+    })
+  })
+
+  describe('map, list, set', () => {
+    beforeEach(async () => {
+      await peopleRooms()
+        .create([
+          {
+            people_id: 1,
+            room_id: 1,
+            time: 1,
+            admin: false,
+            teams: {a: 'b', c: 'd'},
+            games: ['a', 'b', 'b'],
+            winners: ['a', 'b', 'b']
+          },
+          {
+            people_id: 2,
+            room_id: 2,
+            time: 2,
+            admin: false,
+            teams: {x: 'x', y: 'y'},
+            games: ['x', 'y', 'y'],
+            winners: ['x', 'y', 'y']
+          }
+        ])
+    })
+
+    afterEach(async () => {
+      try {
+        await peopleRooms().remove([1, 1, 1])
+        await peopleRooms().remove([2, 2, 2])
+        await peopleRooms().remove([3, 3, 3])
+      } catch (err) {}
+    })
+
+    it('get', () => {
+      return peopleRooms().get([1, 1, 1]).then(data => {
+        expect(data).to.be.ok
+        expect(data.people_id).to.equal(1)
+        expect(data.teams).to.be.deep.equal({a: 'b', c: 'd'})
+        expect(data.games).to.be.deep.equal(['a', 'b', 'b'])
+        expect(data.winners).to.be.deep.equal(['a', 'b'])
+      })
+    })
+
+    it('find contains', () => {
+      return peopleRooms().find({
+        query: {
+          teams: {
+            $contains: 'd'
+          },
+          games: {
+            $contains: 'a'
+          },
+          winners: {
+            $contains: 'b'
+          },
+          $allowFiltering: true
+        }
+      }).then(data => {
+        expect(data).to.be.instanceof(Array)
+        expect(data.length).to.equal(1)
+        expect(data[0].people_id).to.equal(1)
+        expect(data[0].teams).to.be.deep.equal({a: 'b', c: 'd'})
+        expect(data[0].games).to.be.deep.equal(['a', 'b', 'b'])
+        expect(data[0].winners).to.be.deep.equal(['a', 'b'])
+      })
+    })
+
+    it('find containsKey', () => {
+      return peopleRooms().find({
+        query: {
+          teams: {
+            $containsKey: 'a'
+          },
+          $allowFiltering: true
+        }
+      }).then(data => {
+        expect(data).to.be.instanceof(Array)
+        expect(data.length).to.equal(1)
+        expect(data[0].people_id).to.equal(1)
+        expect(data[0].teams).to.be.deep.equal({a: 'b', c: 'd'})
+        expect(data[0].games).to.be.deep.equal(['a', 'b', 'b'])
+        expect(data[0].winners).to.be.deep.equal(['a', 'b'])
+      })
+    })
+
+    it('create', () => {
+      return peopleRooms().create({
+        people_id: 3,
+        room_id: 3,
+        time: 3,
+        admin: false,
+        teams: {a: 'b', c: 'd'},
+        games: ['a', 'b', 'b'],
+        winners: ['a', 'b', 'b']
+      }).then(data => {
+        expect(data).to.be.ok
+        expect(data.people_id).to.equal(3)
+        expect(data.teams).to.be.deep.equal({a: 'b', c: 'd'})
+        expect(data.games).to.be.deep.equal(['a', 'b', 'b'])
+        expect(data.winners).to.be.deep.equal(['a', 'b'])
+      })
+    })
+
+    it('update', () => {
+      return peopleRooms().update([1, 1, 1], {
+        admin: false,
+        teams: {b: 'c', d: 'e'},
+        games: ['b', 'c', 'c'],
+        winners: ['b', 'c', 'c']
+      }).then(data => {
+        expect(data).to.be.ok
+        expect(data.people_id).to.equal(1)
+        expect(data.teams).to.be.deep.equal({b: 'c', d: 'e'})
+        expect(data.games).to.be.deep.equal(['b', 'c', 'c'])
+        expect(data.winners).to.be.deep.equal(['b', 'c'])
+      })
+    })
+
+    it('update with $add', () => {
+      return peopleRooms().update([1, 1, 1], {
+        admin: false,
+        teams: {$add: {b: 'c', d: 'e'}},
+        games: {$add: ['b', 'c', 'c']},
+        winners: {$add: ['b', 'c', 'c']}
+      }).then(data => {
+        expect(data).to.be.ok
+        expect(data.teams).to.be.deep.equal({a: 'b', c: 'd', b: 'c', d: 'e'})
+        expect(data.games).to.be.deep.equal(['a', 'b', 'b', 'b', 'c', 'c'])
+        expect(data.winners).to.be.deep.equal(['a', 'b', 'c'])
+      })
+    })
+
+    it('update with $remove', () => {
+      return peopleRooms().update([1, 1, 1], {
+        admin: false,
+        teams: {$remove: ['a', 'z']},
+        games: {$remove: ['b', 'z']},
+        winners: {$remove: ['b', 'z']}
+      }).then(data => {
+        expect(data).to.be.ok
+        expect(data.teams).to.be.deep.equal({c: 'd'})
+        expect(data.games).to.be.deep.equal(['a'])
+        expect(data.winners).to.be.deep.equal(['a'])
+      })
+    })
+
+    it('update with $remove to null', () => {
+      return peopleRooms().update([1, 1, 1], {
+        admin: false,
+        teams: {$remove: ['a', 'c']},
+        games: {$remove: ['a', 'b']},
+        winners: {$remove: ['a', 'b']}
+      }).then(data => {
+        expect(data).to.be.ok
+        expect(data.teams).to.equal(null)
+        expect(data.games).to.equal(null)
+        expect(data.winners).to.equal(null)
+      })
+    })
+
+    it('patch', () => {
+      return peopleRooms().patch([1, 1, 1], {
+        teams: {b: 'c', d: 'e'},
+        games: ['b', 'c', 'c'],
+        winners: ['b', 'c', 'c']
+      }).then(data => {
+        expect(data).to.be.ok
+        expect(data.teams).to.be.deep.equal({b: 'c', d: 'e'})
+        expect(data.games).to.be.deep.equal(['b', 'c', 'c'])
+        expect(data.winners).to.be.deep.equal(['b', 'c'])
+      })
+    })
+
+    it('patch with $add', () => {
+      return peopleRooms().patch([1, 1, 1], {
+        teams: {$add: {b: 'c', d: 'e'}},
+        games: {$add: ['b', 'c', 'c']},
+        winners: {$add: ['b', 'c', 'c']}
+      }).then(data => {
+        expect(data).to.be.ok
+        expect(data.teams).to.be.deep.equal({a: 'b', c: 'd', b: 'c', d: 'e'})
+        expect(data.games).to.be.deep.equal(['a', 'b', 'b', 'b', 'c', 'c'])
+        expect(data.winners).to.be.deep.equal(['a', 'b', 'c'])
+      })
+    })
+
+    it('patch with $remove', () => {
+      return peopleRooms().patch([1, 1, 1], {
+        teams: {$remove: ['a', 'z']},
+        games: {$remove: ['b', 'z']},
+        winners: {$remove: ['b', 'z']}
+      }).then(data => {
+        expect(data).to.be.ok
+        expect(data.teams).to.be.deep.equal({c: 'd'})
+        expect(data.games).to.be.deep.equal(['a'])
+        expect(data.winners).to.be.deep.equal(['a'])
+      })
+    })
+
+    it('patch with $remove to null', () => {
+      return peopleRooms().patch([1, 1, 1], {
+        teams: {$remove: ['a', 'c']},
+        games: {$remove: ['a', 'b']},
+        winners: {$remove: ['a', 'b']}
+      }).then(data => {
+        expect(data).to.be.ok
+        expect(data.teams).to.equal(null)
+        expect(data.games).to.equal(null)
+        expect(data.winners).to.equal(null)
+      })
+    })
+  })
+
+  describe('increment & decrement', () => {
+    beforeEach(async () => {
+      await peopleRoomsCustomIdSeparator()
+        .update([1, 1], {
+          days: {
+            $increment: 1
+          }
+        }, {
+          query: {
+            $noSelect: true
+          }
+        })
+    })
+
+    it('get', () => {
+      return peopleRoomsCustomIdSeparator().get([1, 1]).then(data => {
+        expect(data).to.be.ok
+        expect(data.people_id).to.equal(1)
+        expect(data.days.toString()).to.equal('1')
+      })
+    })
+
+    it('find', () => {
+      return peopleRoomsCustomIdSeparator().find({
+        query: {
+          days: 2,
+          $allowFiltering: true
+        }
+      }).then(data => {
+        expect(data).to.be.instanceof(Array)
+        expect(data.length).to.equal(1)
+        expect(data[0].people_id).to.equal(1)
+        expect(data[0].days.toString()).to.equal('2')
+      })
+    })
+
+    it('update increment', () => {
+      return peopleRoomsCustomIdSeparator().update([1, 1], {
+        days: {
+          $increment: 2
+        }
+      }).then(data => {
+        expect(data).to.be.ok
+        expect(data.people_id).to.equal(1)
+        expect(data.days.toString()).to.equal('5')
+      })
+    })
+
+    it('update decrement', () => {
+      return peopleRoomsCustomIdSeparator().update([1, 1], {
+        days: {
+          $decrement: 1
+        }
+      }).then(data => {
+        expect(data).to.be.ok
+        expect(data.people_id).to.equal(1)
+        expect(data.days.toString()).to.equal('5')
+      })
+    })
+
+    it('patch increment', () => {
+      return peopleRoomsCustomIdSeparator().patch([1, 1], {
+        days: {
+          $increment: 2
+        }
+      }).then(data => {
+        expect(data).to.be.ok
+        expect(data.people_id).to.equal(1)
+        expect(data.days.toString()).to.equal('8')
+      })
+    })
+
+    it('patch decrement', () => {
+      return peopleRoomsCustomIdSeparator().patch([1, 1], {
+        days: {
+          $decrement: 1
+        }
+      }).then(data => {
+        expect(data).to.be.ok
+        expect(data.people_id).to.equal(1)
+        expect(data.days.toString()).to.equal('8')
+      })
+    })
+  })
+
+  describe('select TTL & WRITETIME', () => {
+    const timestamp = Date.now() * 1000
+
+    before(async () => {
+      await people()
+        .create({
+          id: 7,
+          name: 'Dave',
+          age: 10
+        }, {
+          query: {
+            $ttl: 600,
+            $timestamp: timestamp
+          }
+        })
+    })
+
+    after(async () => {
+      try {
+        await people().remove(7)
+      } catch (err) {}
+    })
+
+    it('get', () => {
+      return people().get(7, {
+        query: {
+          $select: ['ttl(name)', 'writetime(name)']
+        }
+      }).then(data => {
+        expect(data).to.be.ok
+        expect(data.name_ttl).to.be.ok
+        expect(data.name_writetime.toString()).to.equal(timestamp.toString())
+      })
+    })
+
+    it('find', () => {
+      return people().find({
+        query: {
+          id: 7,
+          $select: ['TTL(name)', 'WRITETIME(name)']
+        }
+      }).then(data => {
+        expect(data).to.be.instanceof(Array)
+        expect(data.length).to.equal(1)
+        expect(data[0].name_ttl).to.be.ok
+        expect(data[0].name_writetime.toString()).to.equal(timestamp.toString())
+      })
+    })
+  })
+
+  describe('auto-generated fields', () => {
+    before(async () => {
+      await peopleRooms()
+        .create({
+          people_id: 1,
+          room_id: 1,
+          time: 1,
+          admin: false
+        })
+
+      await peopleMv()
+        .create({
+          id: 1,
+          name: 'Dave'
+        })
+    })
+
+    after(async () => {
+      try {
+        await peopleRooms().remove([1, 1, 1])
+        await peopleMv().remove(1)
+      } catch (err) {}
+    })
+
+    it('field exists when enabled with boolean', () => {
+      return peopleRooms().get([1, 1, 1]).then(data => {
+        expect(data).to.be.ok
+        expect(data.people_id).to.equal(1)
+        expect(data._version).to.be.instanceof(TimeUuid)
+        expect(data.created_at).to.be.instanceof(Date)
+        expect(data.updated_at).to.be.instanceof(Date)
+      })
+    })
+
+    it('field exists when enabled with object', () => {
+      return peopleMv().get(1).then(data => {
+        expect(data).to.be.ok
+        expect(data.name).to.equal('Dave')
+        expect(data.__v).to.be.instanceof(TimeUuid)
+        expect(data.createdAt).to.be.instanceof(Date)
+        expect(data.updatedAt).to.be.instanceof(Date)
+      })
+    })
+  })
+
+  describe('hooks', () => {
+    before(async () => {
+      await peopleMv()
+        .create({
+          id: 1
+        })
+    })
+
+    after(async () => {
+      try {
+        await peopleMv().remove(1)
+        await peopleMv().remove(2)
+      } catch (err) {}
+    })
+
+    it('before_save hook sets default value', () => {
+      return peopleMv().get(1).then(data => {
+        expect(data).to.be.ok
+        expect(data.id).to.equal(1)
+        expect(data.name).to.equal('Default')
+      })
+    })
+
+    it('before_save hook throws an error', () => {
+      return peopleMv().create({
+        id: 2,
+        name: 'Forbidden'
+      }).then(() => {
+        throw new Error('Should never get here')
+      }).catch(function (error) {
+        expect(error).to.be.ok
+        expect(error instanceof errors.BadRequest).to.be.ok
+        expect(error.message).to.equal('Error in before_save lifecycle function')
+      })
+    })
+
+    it('after_save hook throws an error', () => {
+      return peopleMv().create({
+        id: 2,
+        name: 'ForbiddenAfter'
+      }).then(() => {
+        throw new Error('Should never get here')
+      }).catch(function (error) {
+        expect(error).to.be.ok
+        expect(error instanceof errors.BadRequest).to.be.ok
+        expect(error.message).to.equal('Error in after_save lifecycle function')
+      })
+    })
+
+    it('before_update hook replace a value', () => {
+      return peopleMv().update(1, {name: 'Replace'}).then(data => {
+        expect(data).to.be.ok
+        expect(data.id).to.equal(1)
+        expect(data.name).to.equal('Default')
+      })
+    })
+
+    it('before_update hook throws an error', () => {
+      return peopleMv().update(1, {name: 'Forbidden'}).then(() => {
+        throw new Error('Should never get here')
+      }).catch(function (error) {
+        expect(error).to.be.ok
+        expect(error instanceof errors.BadRequest).to.be.ok
+        expect(error.message).to.equal('Error in before_update lifecycle function')
+      })
+    })
+
+    it('after_update hook throws an error', () => {
+      return peopleMv().update(1, {name: 'ForbiddenAfter'}).then(() => {
+        throw new Error('Should never get here')
+      }).catch(function (error) {
+        expect(error).to.be.ok
+        expect(error instanceof errors.BadRequest).to.be.ok
+        expect(error.message).to.equal('Error in after_update lifecycle function')
+      })
+    })
+
+    it('before_delete hook throws an error', () => {
+      return peopleMv().remove(998).then(() => {
+        throw new Error('Should never get here')
+      }).catch(function (error) {
+        expect(error).to.be.ok
+        expect(error instanceof errors.BadRequest).to.be.ok
+        expect(error.message).to.equal('Error in before_delete lifecycle function')
+      })
+    })
+
+    it('after_delete hook throws an error', () => {
+      return peopleMv().remove(999).then(() => {
+        throw new Error('Should never get here')
+      }).catch(function (error) {
+        expect(error).to.be.ok
+        expect(error instanceof errors.BadRequest).to.be.ok
+        expect(error.message).to.equal('Error in after_delete lifecycle function')
       })
     })
   })

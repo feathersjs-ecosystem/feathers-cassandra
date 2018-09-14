@@ -5,7 +5,6 @@ module.exports = function () {
   const app = this
 
   const options = {
-    id: 'id',
     model: createModel(app),
     cassanknex: app.get('cassanknex'),
     events: ['testing']

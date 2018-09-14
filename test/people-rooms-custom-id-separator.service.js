@@ -5,7 +5,6 @@ module.exports = function () {
   const app = this
 
   const options = {
-    id: ['people_id', 'room_id'], // TODO: check if redundant
     idSeparator: '.',
     model: createModel(app),
     cassanknex: app.get('cassanknex'),

@@ -6,7 +6,6 @@ module.exports = function () {
 
   const options = {
     model: createModel(app),
-    id: 'id',
     paginate: {
       default: 2,
       max: 4

@@ -53,6 +53,7 @@
   "dependencies": {
     "@feathersjs/commons": "^2.0.0",
     "@feathersjs/errors": "^3.3.0",
+    "arr-flatten": "^1.1.0",
     "is-plain-object": "^2.0.1",
     "lodash.isequal": "^4.5.0",
     "uberproto": "^2.0.4"
