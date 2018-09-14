@@ -35,14 +35,9 @@ const app = express(feathers())
   .use(bodyParser.urlencoded({extended: true}))
 
 app.set('models', models)
-app.set('cassandraClient', cassandraClient)
 
 app.configure(knex)
 app.configure(services)
-
-app.use(function (error, req, res, next) {
-  res.json(error)
-})
 
 // Start the server
 module.exports = app.listen(3030)

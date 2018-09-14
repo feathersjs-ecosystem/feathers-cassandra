@@ -1,20 +1,19 @@
-module.exports = function () {
-  const app = this;
+const FeathersCassandra = require('../src')
 
-  let cassanknex = null;
+module.exports = function (app) {
+  const cassandraClient = app.get('models').orm.get_system_client()
 
-  const cassandraClient = app.get('cassandraClient')
   cassandraClient.connect(err => {
     if (err) throw err
 
-    cassanknex = require('cassanknex')({
+    const cassanknex = require('cassanknex')({
       connection: cassandraClient
     })
+
+    FeathersCassandra.cassanknex(cassanknex)
 
     cassanknex.on('ready', err => {
       if (err) throw err
     })
   })
-
-  app.set('cassanknex', () => cassanknex)
 };

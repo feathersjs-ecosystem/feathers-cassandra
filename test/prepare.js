@@ -1,7 +1,7 @@
-const prepare = require('mocha-prepare')
 const feathers = require('@feathersjs/feathers')
 const sleep = require('await-sleep')
 const services = require('./services')
+const FeathersCassandra = require('../src')
 
 const KEYSPACE = 'test'
 
@@ -29,72 +29,68 @@ const truncateTables = async cassanknex => {
   await exec(cassanknex(KEYSPACE).truncate('todos'))
 }
 
-prepare(async done => {
-  function knex () {
-    const app = this
+const prepare = async () => {
+  return new Promise((resolve, reject) => {
+    function knex (app) {
+      const cassandraClient = app.get('models').orm.get_system_client()
 
-    let cassanknex = null
+      cassandraClient.connect(err => {
+        if (err) return reject(err)
 
-    const cassandraClient = app.get('cassandraClient')
-    cassandraClient.connect(err => {
-      if (err) throw err
+        const cassanknex = require('cassanknex')({
+          connection: cassandraClient
+        })
 
-      cassanknex = require('cassanknex')({
-        connection: cassandraClient
-      })
+        FeathersCassandra.cassanknex(cassanknex)
 
-      cassanknex.on('ready', async err => {
-        if (err) throw err
+        cassanknex.on('ready', async err => {
+          if (err) return reject(err)
 
-        return sleep(30000).then(() => {
-          return truncateTables(cassanknex)
-            .then(() => {
-              done()
-            })
+          await sleep(20000)
+          await truncateTables(cassanknex)
+
+          resolve()
         })
       })
+    }
+
+    const ExpressCassandra = require('express-cassandra')
+    const models = ExpressCassandra.createClient({
+      clientOptions: {
+        contactPoints: ['127.0.0.1'],
+        protocolOptions: { port: 9042 },
+        keyspace: KEYSPACE,
+        queryOptions: { consistency: ExpressCassandra.consistencies.one }
+      },
+      ormOptions: {
+        defaultReplicationStrategy: {
+          'class': 'SimpleStrategy',
+          'replication_factor': 1
+        },
+        migration: 'alter',
+        createKeyspace: true
+      }
     })
 
-    app.set('cassanknex', () => cassanknex)
-  }
+    app = feathers()
+      .set('models', models)
+      .configure(knex)
+      .configure(services)
 
-  const ExpressCassandra = require('express-cassandra')
-  const models = ExpressCassandra.createClient({
-    clientOptions: {
-      contactPoints: ['127.0.0.1'],
-      protocolOptions: { port: 9042 },
-      keyspace: KEYSPACE,
-      queryOptions: { consistency: ExpressCassandra.consistencies.one }
-    },
-    ormOptions: {
-      defaultReplicationStrategy: {
-        'class': 'SimpleStrategy',
-        'replication_factor': 1
-      },
-      migration: 'alter',
-      createKeyspace: true
-    }
+    people = app.service('people')
+    peopleRooms = app.service('people-rooms')
+    peopleRoomsCustomIdSeparator = app.service('people-rooms-custom-id-separator')
+    peopleMv = app.service('people-mv')
   })
-
-  const cassandraClient = models.orm.get_system_client()
-
-  app = feathers()
-    .set('models', models)
-    .set('cassandraClient', cassandraClient)
-    .configure(knex)
-    .configure(services)
-
-  people = app.service('people')
-  peopleRooms = app.service('people-rooms')
-  peopleRoomsCustomIdSeparator = app.service('people-rooms-custom-id-separator')
-  peopleMv = app.service('people-mv')
-})
+}
 
 module.exports = {
-  app: () => app,
-  cassandraClient: () => app.get('cassandraClient'),
-  people: () => people,
-  peopleRooms: () => peopleRooms,
-  peopleRoomsCustomIdSeparator: () => peopleRoomsCustomIdSeparator,
-  peopleMv: () => peopleMv
+  prepare,
+  refs: {
+    app: () => app,
+    people: () => people,
+    peopleRooms: () => peopleRooms,
+    peopleRoomsCustomIdSeparator: () => peopleRoomsCustomIdSeparator,
+    peopleMv: () => peopleMv
+  }
 }

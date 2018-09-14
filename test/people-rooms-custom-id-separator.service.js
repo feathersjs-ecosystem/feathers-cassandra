@@ -7,7 +7,6 @@ module.exports = function () {
   const options = {
     idSeparator: '.',
     model: createModel(app),
-    cassanknex: app.get('cassanknex'),
     events: ['testing']
   }
 

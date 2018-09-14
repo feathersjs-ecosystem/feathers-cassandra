@@ -73,21 +73,16 @@ const OPERATORS_MAP = {
 class Service {
   constructor (options) {
     if (!options) {
-      throw new Error('FeathersCassandra options have to be provided')
+      throw new errors.GeneralError('FeathersCassandra options have to be provided')
     }
 
     if (!options.model) {
-      throw new Error('You must provide an ExpressCassandra Model')
-    }
-
-    if (!options.cassanknex) {
-      throw new Error('You must provide a function that returns an initialized CassanKnex object')
+      throw new errors.GeneralError('You must provide an ExpressCassandra Model')
     }
 
     const id = flatten(options.model._properties.schema.key)
 
     this.options = options || {}
-    this.cassanknex = options.cassanknex
     this.id = id.length === 1 ? id[0] : id
     this.keyspace = options.model.get_keyspace_name()
     this.tableName = options.model.get_table_name()
@@ -201,17 +196,11 @@ class Service {
       const createdAtFieldName = 'createdAt'
       const updatedAtFieldName = 'updatedAt'
 
-      if (isPlainObject(timestamps)) {
-        if (createdAt && timestamps.createdAt) {
-          data[typeof timestamps.createdAt === 'string' ? timestamps.createdAt : createdAtFieldName] = now
-        }
-        if (updatedAt && timestamps.updatedAt) {
-          data[typeof timestamps.updatedAt === 'string' ? timestamps.updatedAt : updatedAtFieldName] = now
-        }
-      } else {
-        if (createdAt) { data[createdAtFieldName] = now }
-
-        if (updatedAt) { data[updatedAtFieldName] = now }
+      if (createdAt && timestamps.createdAt) {
+        data[typeof timestamps.createdAt === 'string' ? timestamps.createdAt : createdAtFieldName] = now
+      }
+      if (updatedAt && timestamps.updatedAt) {
+        data[typeof timestamps.updatedAt === 'string' ? timestamps.updatedAt : updatedAtFieldName] = now
       }
     }
   }
@@ -224,11 +213,7 @@ class Service {
       const timeuuidVersion = TimeUuid.now()
       const versionFieldName = '__v'
 
-      if (isPlainObject(versions)) {
-        data[typeof versions.key === 'string' ? versions.key : versionFieldName] = timeuuidVersion
-      } else {
-        data[versionFieldName] = timeuuidVersion
-      }
+      data[typeof versions.key === 'string' ? versions.key : versionFieldName] = timeuuidVersion
     }
   }
 
@@ -304,10 +289,14 @@ class Service {
   _createQuery (params = {}, type) {
     let q = null
 
-    if (!type) { q = this.cassanknex()(this.keyspace).from(this.tableName) }
-    if (type === 'create') { q = this.cassanknex()(this.keyspace).into(this.tableName) }
-    if (type === 'update') { q = this.cassanknex()(this.keyspace).update(this.tableName) }
-    if (type === 'delete') { q = this.cassanknex()(this.keyspace).delete().from(this.tableName) }
+    if (!Service.cassanknex) {
+      throw new errors.GeneralError('You must bind FeathersCassandra with an initialized CassanKnex object')
+    }
+
+    if (!type) { q = Service.cassanknex(this.keyspace).from(this.tableName) }
+    if (type === 'create') { q = Service.cassanknex(this.keyspace).into(this.tableName) }
+    if (type === 'update') { q = Service.cassanknex(this.keyspace).update(this.tableName) }
+    if (type === 'delete') { q = Service.cassanknex(this.keyspace).delete().from(this.tableName) }
 
     return q
   }
@@ -718,7 +707,7 @@ class Service {
   update (id, data, params) {
     if (Array.isArray(data)) {
       return Promise.reject(
-        new Error('Not replacing multiple records. Did you mean `patch`?')
+        new errors.BadRequest('Not replacing multiple records. Did you mean `patch`?')
       )
     }
 
@@ -920,6 +909,10 @@ class Service {
 
 const init = options => {
   return new Service(options)
+}
+
+init.cassanknex = val => {
+  Service.cassanknex = val
 }
 
 init.Service = Service

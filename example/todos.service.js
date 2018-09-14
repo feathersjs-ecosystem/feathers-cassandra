@@ -9,8 +9,7 @@ module.exports = function () {
     paginate: {
       default: 2,
       max: 4
-    },
-    cassanknex: app.get('cassanknex'),
+    }
   };
 
   app.use('/todos', createService(options));

@@ -1,2 +1,3 @@
---require test/prepare
---timeout 120000
+test/
+--timeout 30000
+--exit

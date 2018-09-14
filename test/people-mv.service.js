@@ -6,7 +6,6 @@ module.exports = function () {
 
   const options = {
     model: createModel(app),
-    cassanknex: app.get('cassanknex'),
     materializedViews: [
       {
         keys: ['name'],

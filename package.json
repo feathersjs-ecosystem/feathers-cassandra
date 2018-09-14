@@ -43,7 +43,8 @@
     "compile": "rimraf lib/ && babel -d lib/ src/",
     "watch": "babel --watch -d lib/ src/",
     "lint": "standard --fix src/**/*.js test/**/*.js --config",
-    "mocha": "mocha --opts mocha.opts",
+    "mocha": "nyc mocha --opts mocha.opts",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
     "test": "npm run compile && npm run lint && npm run mocha",
     "example": "npm run compile && babel-node example/app"
   },
@@ -73,10 +74,12 @@
     "cassandra-driver": "^3.5.0",
     "cassanknex": "git+https://github.com/dekelev/cassanknex.git#fixed",
     "chai": "^4.1.2",
+    "coveralls": "^3.0.2",
     "express-cassandra": "^2.2.3",
-    "feathers-service-tests": "^0.10.2",
     "mocha": "^5.2.0",
-    "mocha-prepare": "^0.1.0",
+    "nyc": "^13.0.1",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.2",
     "rimraf": "^2.6.2",
     "standard": "^12.0.1"
   },
@@ -98,6 +101,12 @@
           }
         }
       ]
+    ]
+  },
+  "nyc": {
+    "exclude": [
+      "test/**",
+      "example"
     ]
   },
   "standard": {

@@ -25,7 +25,7 @@ module.exports = function errorHandler (error) {
   let feathersError = error
 
   // CassanKnex errors
-  if (error.code && (!error.type || error.type !== 'FeathersError')) {
+  if (error.code !== undefined && (!error.type || error.type !== 'FeathersError')) {
     switch (error.code) {
       case ERROR_CODES.syntaxError:
       case ERROR_CODES.invalid:
