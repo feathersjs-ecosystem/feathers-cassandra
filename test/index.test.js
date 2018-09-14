@@ -1727,7 +1727,7 @@ describe('Feathers Cassandra service', () => {
 })
 
 describe('Common functionality', function () {
-  this.slow(1000)
+  this.slow(2000)
 
   it('is CommonJS compatible', () =>
     assert.strictEqual(typeof require('../lib'), 'function'))
