@@ -317,6 +317,18 @@ describe('Feathers Cassandra service', () => {
       })
     })
 
+    it('allows get queries by array in string', () => {
+      return peopleRoomsCustomIdSeparator.get('[2, 2]').then(data => {
+        expect(data.people_id).to.equal(2)
+      })
+    })
+
+    it('allows get queries by object in string', () => {
+      return peopleRoomsCustomIdSeparator.get('{ "people_id": 2, "room_id": 2 }').then(data => {
+        expect(data.people_id).to.equal(2)
+      })
+    })
+
     it('allows find queries', () => {
       return peopleRooms.find({ query: { people_id: 2, room_id: 2 } }).then(data => {
         expect(data.length).to.equal(2)
