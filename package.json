@@ -44,7 +44,7 @@
     "watch": "babel --watch -d lib/ src/",
     "lint": "standard --fix src/**/*.js test/**/*.js --config",
     "mocha": "nyc mocha --opts mocha.opts",
-    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "coverage": "nyc report --reporter=lcovonly | coveralls",
     "test": "npm run compile && npm run lint && npm run mocha",
     "example": "npm run compile && babel-node example/app"
   },
