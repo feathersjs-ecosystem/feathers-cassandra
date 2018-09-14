@@ -318,11 +318,10 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('allows find queries', () => {
-      return peopleRooms.find({ query: { room_id: 2, $allowFiltering: true } }).then(data => {
-        expect(data.length).to.equal(3)
+      return peopleRooms.find({ query: { people_id: 2, room_id: 2 } }).then(data => {
+        expect(data.length).to.equal(2)
         expect(data[0].people_id).to.equal(2)
         expect(data[1].people_id).to.equal(2)
-        expect(data[2].people_id).to.equal(1)
       })
     })
 

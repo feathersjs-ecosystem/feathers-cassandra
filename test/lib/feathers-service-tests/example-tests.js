@@ -11,6 +11,7 @@ exports.default = function () {
   var firstId = void 0;
 
   it('POST', function () {
+    this.slow(200)
     var body = { [idProp]: 1, text: 'first todo', complete: false };
 
     return _requestPromise2.default.post({ url: url, json: true, body: body }).then(function (todo) {

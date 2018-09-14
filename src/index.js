@@ -101,7 +101,10 @@ class Service {
   extractIds (id) {
     if (typeof id === 'object') { return this.id.map(idKey => id[idKey]) }
     if (id[0] === '[' && id[id.length - 1] === ']') { return JSON.parse(id) }
-    if (id[0] === '{' && id[id.length - 1] === '}') { return Object.values(JSON.parse(id)) }
+    if (id[0] === '{' && id[id.length - 1] === '}') {
+      const obj = JSON.parse(id)
+      return Object.keys(obj).map(key => obj[key])
+    }
 
     if (typeof id !== 'string' || !id.includes(this.idSeparator)) { throw new errors.BadRequest('When using composite primary key, id must contain values for all primary keys') }
 
@@ -669,8 +672,8 @@ class Service {
 
     q.set(newObject)
 
-    new Map(Object.entries(idsQuery)).forEach((val, key) => {
-      q.where(key, '=', val)
+    Object.keys(idsQuery).forEach(key => {
+      q.where(key, '=', idsQuery[key])
     })
 
     return this.exec(q)
