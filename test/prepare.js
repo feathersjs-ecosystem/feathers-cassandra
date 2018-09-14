@@ -46,7 +46,7 @@ const prepare = async () => {
         cassanknex.on('ready', async err => {
           if (err) return reject(err)
 
-          await sleep(20000)
+          await sleep(30000)
           await truncateTables(cassanknex)
 
           resolve()

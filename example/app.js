@@ -23,8 +23,6 @@ const models = ExpressCassandra.createClient({
   }
 })
 
-const cassandraClient = models.orm.get_system_client()
-
 // Create a feathers instance.
 const app = express(feathers())
 // Enable REST services
@@ -35,7 +33,6 @@ const app = express(feathers())
   .use(bodyParser.urlencoded({extended: true}))
 
 app.set('models', models)
-
 app.configure(knex)
 app.configure(services)
 
