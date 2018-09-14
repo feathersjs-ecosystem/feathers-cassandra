@@ -76,6 +76,7 @@
     "chai": "^4.1.2",
     "coveralls": "^3.0.2",
     "express-cassandra": "^2.2.3",
+    "istanbul": "^0.4.5",
     "mocha": "^5.2.0",
     "nyc": "^13.0.1",
     "request": "^2.88.0",
