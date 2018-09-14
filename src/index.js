@@ -82,7 +82,7 @@ class Service {
 
     const id = flatten(options.model._properties.schema.key)
 
-    this.options = options || {}
+    this.options = options
     this.id = id.length === 1 ? id[0] : id
     this.keyspace = options.model.get_keyspace_name()
     this.tableName = options.model.get_table_name()
