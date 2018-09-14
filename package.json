@@ -106,8 +106,8 @@
   "nyc": {
     "exclude": [
       "test/**",
-      "lib",
-      "example"
+      "lib/**",
+      "example/**"
     ]
   },
   "standard": {
