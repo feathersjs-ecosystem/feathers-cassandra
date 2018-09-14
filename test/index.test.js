@@ -1,10 +1,10 @@
 /* eslint-env mocha */
 /* eslint-disable no-unused-expressions */
-const {expect} = require('chai')
+const { expect } = require('chai')
 const TimeUuid = require('cassandra-driver').types.TimeUuid
-const {app, cassandraClient, people, peopleMv, peopleRooms, peopleRoomsCustomIdSeparator} = require('./prepare')
+const { app, cassandraClient, people, peopleMv, peopleRooms, peopleRoomsCustomIdSeparator } = require('./prepare')
 const assert = require('assert')
-const {base, example} = require('./lib/feathers-service-tests')
+const { base, example } = require('./lib/feathers-service-tests')
 const errors = require('@feathersjs/errors')
 const sleep = require('await-sleep')
 const server = require('../example/app')
@@ -49,7 +49,7 @@ describe('Feathers Cassandra service', () => {
 
   describe('Common functionality', () => {
     it('is CommonJS compatible', () =>
-      assert.equal(typeof require('../lib'), 'function'))
+      assert.strictEqual(typeof require('../lib'), 'function'))
 
     base(app(), errors, 'people')
     base(app(), errors, 'people-customid', 'customid')
@@ -115,7 +115,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('allows get queries by object', () => {
-      return peopleRooms().get({people_id: 2, room_id: 2, time: 3}).then(data => {
+      return peopleRooms().get({ people_id: 2, room_id: 2, time: 3 }).then(data => {
         expect(data.people_id).to.equal(2)
       })
     })
@@ -133,7 +133,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('allows find queries', () => {
-      return peopleRooms().find({query: {room_id: 2, $allowFiltering: true}}).then(data => {
+      return peopleRooms().find({ query: { room_id: 2, $allowFiltering: true } }).then(data => {
         expect(data.length).to.equal(2)
         expect(data[0].people_id).to.equal(2)
         expect(data[1].people_id).to.equal(1)
@@ -145,7 +145,7 @@ describe('Feathers Cassandra service', () => {
         query: {
           $token: {
             $keys: ['people_id', 'room_id'],
-            $condition: {$gt: [1, 2]}
+            $condition: { $gt: [1, 2] }
           }
         }
       }).then(data => {
@@ -156,14 +156,14 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('allows patch queries', () => {
-      return peopleRooms().patch([2, 2, 3], {people_id: 1, admin: false}).then(data => {
+      return peopleRooms().patch([2, 2, 3], { people_id: 1, admin: false }).then(data => {
         expect(data.people_id).to.equal(2)
         expect(data.admin).to.equal(false)
       })
     })
 
     it('allows update queries', () => {
-      return peopleRooms().update([2, 2, 3], {people_id: 1, admin: false}).then(data => {
+      return peopleRooms().update([2, 2, 3], { people_id: 1, admin: false }).then(data => {
         expect(data.people_id).to.equal(2)
         expect(data.admin).to.equal(false)
       })
@@ -207,14 +207,14 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('patch with $noSelect', () => {
-      return people().patch(1, {name: 'John'}, {query: {$noSelect: true}}).then(data => {
+      return people().patch(1, { name: 'John' }, { query: { $noSelect: true } }).then(data => {
         expect(data).to.be.ok
         expect(data).to.be.empty
       })
     })
 
     it('update with $noSelect', () => {
-      return people().update(1, {name: 'John', age: 10}, {query: {$noSelect: true}}).then(data => {
+      return people().update(1, { name: 'John', age: 10 }, { query: { $noSelect: true } }).then(data => {
         expect(data).to.be.ok
         expect(data.name).to.equal('John')
         expect(data.created).to.equal(null)
@@ -244,7 +244,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('$like in query', () => {
-      return people().find({query: {name: {$like: '%lie%'}}}).then(data => {
+      return people().find({ query: { name: { $like: '%lie%' } } }).then(data => {
         expect(data[0].name).to.equal('Charlie Brown')
       })
     })
@@ -281,7 +281,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('$and in query', () => {
-      return people().find({query: {$and: [{name: 'Dave'}, {age: {$lt: 32}}], $allowFiltering: true}}).then(data => {
+      return people().find({ query: { $and: [{ name: 'Dave' }, { age: { $lt: 32 } }], $allowFiltering: true } }).then(data => {
         expect(data[0].age).to.equal(23)
       })
     })
@@ -318,7 +318,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('$or in query', () => {
-      return people().find({query: {$or: [{name: 'John'}, {name: 'Dada'}]}}).then(() => {
+      return people().find({ query: { $or: [{ name: 'John' }, { name: 'Dada' }] } }).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -389,7 +389,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can validate create data', () => {
-      return people().create({id: 1, name: 'forbidden', age: 30}).then(() => {
+      return people().create({ id: 1, name: 'forbidden', age: 30 }).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -399,7 +399,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can validate create data required fields', () => {
-      return people().create({id: 1, name: 'John'}).then(() => {
+      return people().create({ id: 1, name: 'John' }).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -409,7 +409,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can validate create data required fields with undefined', () => {
-      return people().create({id: 1, name: 'John', age: undefined}).then(() => {
+      return people().create({ id: 1, name: 'John', age: undefined }).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -419,7 +419,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can validate create data required fields with null', () => {
-      return people().create({id: 1, name: 'John', age: null}).then(() => {
+      return people().create({ id: 1, name: 'John', age: null }).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -429,13 +429,13 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can pass validate create data', () => {
-      return people().create({id: 1, name: 'John', age: 30}).then(data => {
+      return people().create({ id: 1, name: 'John', age: 30 }).then(data => {
         expect(data.name).to.equal('John')
       })
     })
 
     it('can validate multiple create data', () => {
-      return people().create([{id: 1, name: 'forbidden', age: 30}]).then(() => {
+      return people().create([{ id: 1, name: 'forbidden', age: 30 }]).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -445,7 +445,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can validate multiple create data required fields', () => {
-      return people().create([{id: 1, name: 'John'}]).then(() => {
+      return people().create([{ id: 1, name: 'John' }]).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -455,7 +455,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can validate multiple create data required fields with undefined', () => {
-      return people().create([{id: 1, name: 'John', age: undefined}]).then(() => {
+      return people().create([{ id: 1, name: 'John', age: undefined }]).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -465,7 +465,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can validate multiple create data required fields with null', () => {
-      return people().create([{id: 1, name: 'John', age: null}]).then(() => {
+      return people().create([{ id: 1, name: 'John', age: null }]).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -475,7 +475,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can pass validate multiple create data', () => {
-      return people().create([{id: 1, name: 'John', age: 30}]).then(data => {
+      return people().create([{ id: 1, name: 'John', age: 30 }]).then(data => {
         expect(data).to.be.instanceof(Array)
         expect(data.length).to.equal(1)
         expect(data[0].name).to.equal('John')
@@ -483,7 +483,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can validate update data', () => {
-      return people().update(1, {name: 'forbidden', age: 30}).then(() => {
+      return people().update(1, { name: 'forbidden', age: 30 }).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -493,7 +493,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can validate update data required fields', () => {
-      return people().update(1, {name: 'John'}).then(() => {
+      return people().update(1, { name: 'John' }).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -503,7 +503,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can validate update data required fields with undefined', () => {
-      return people().update(1, {name: 'John', age: null}).then(() => {
+      return people().update(1, { name: 'John', age: null }).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -513,7 +513,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can validate update data required fields with null', () => {
-      return people().update(1, {name: 'John', age: null}).then(() => {
+      return people().update(1, { name: 'John', age: null }).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -523,15 +523,15 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can pass validate update data', () => {
-      return people().create({id: 1, name: 'Dave', age: 30}).then(() => {
-        return people().update(1, {name: 'John', age: 30}).then(data => {
+      return people().create({ id: 1, name: 'Dave', age: 30 }).then(() => {
+        return people().update(1, { name: 'John', age: 30 }).then(data => {
           expect(data.name).to.equal('John')
         })
       })
     })
 
     it('can validate patch data', () => {
-      return people().patch(1, {name: 'forbidden'}).then(() => {
+      return people().patch(1, { name: 'forbidden' }).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -541,7 +541,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can validate patch data required fields with undefined', () => {
-      return people().patch(1, {name: 'John', age: undefined}).then(() => {
+      return people().patch(1, { name: 'John', age: undefined }).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -551,7 +551,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can validate patch data required fields with null', () => {
-      return people().patch(1, {name: 'John', age: null}).then(() => {
+      return people().patch(1, { name: 'John', age: null }).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -561,13 +561,13 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can pass validate patch data', () => {
-      return people().patch(1, {name: 'John'}).then(data => {
+      return people().patch(1, { name: 'John' }).then(data => {
         expect(data.name).to.equal('John')
       })
     })
 
     it('can validate multiple patch data', () => {
-      return people().patch(null, {name: 'forbidden'}, {query: {id: 1}}).then(() => {
+      return people().patch(null, { name: 'forbidden' }, { query: { id: 1 } }).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -577,8 +577,8 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can pass validate multiple patch data', () => {
-      return people().create({id: 1, name: 'Dave', age: 30}).then(() => {
-        return people().patch(null, {name: 'John'}, {query: {id: 1}}).then(data => {
+      return people().create({ id: 1, name: 'Dave', age: 30 }).then(() => {
+        return people().patch(null, { name: 'John' }, { query: { id: 1 } }).then(data => {
           expect(data).to.be.instanceof(Array)
           expect(data.length).to.equal(1)
           expect(data[0].name).to.equal('John')
@@ -618,7 +618,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can query with named filter', () => {
-      return people().find({query: {$filters: 'old'}}).then(data => {
+      return people().find({ query: { $filters: 'old' } }).then(data => {
         expect(data).to.be.instanceof(Array)
         expect(data.length).to.equal(1)
         expect(data[0].name).to.equal('John')
@@ -646,7 +646,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('can query from materialized view', () => {
-      return peopleMv().find({query: {name: 'Dada'}}).then(data => {
+      return peopleMv().find({ query: { name: 'Dada' } }).then(data => {
         expect(data).to.be.instanceof(Array)
         expect(data.length).to.equal(1)
         expect(data[0].name).to.equal('Dada')
@@ -663,7 +663,7 @@ describe('Feathers Cassandra service', () => {
             room_id: 1,
             time: 1,
             admin: false,
-            teams: {a: 'b', c: 'd'},
+            teams: { a: 'b', c: 'd' },
             games: ['a', 'b', 'b'],
             winners: ['a', 'b', 'b']
           },
@@ -672,7 +672,7 @@ describe('Feathers Cassandra service', () => {
             room_id: 2,
             time: 2,
             admin: false,
-            teams: {x: 'x', y: 'y'},
+            teams: { x: 'x', y: 'y' },
             games: ['x', 'y', 'y'],
             winners: ['x', 'y', 'y']
           }
@@ -691,7 +691,7 @@ describe('Feathers Cassandra service', () => {
       return peopleRooms().get([1, 1, 1]).then(data => {
         expect(data).to.be.ok
         expect(data.people_id).to.equal(1)
-        expect(data.teams).to.be.deep.equal({a: 'b', c: 'd'})
+        expect(data.teams).to.be.deep.equal({ a: 'b', c: 'd' })
         expect(data.games).to.be.deep.equal(['a', 'b', 'b'])
         expect(data.winners).to.be.deep.equal(['a', 'b'])
       })
@@ -715,7 +715,7 @@ describe('Feathers Cassandra service', () => {
         expect(data).to.be.instanceof(Array)
         expect(data.length).to.equal(1)
         expect(data[0].people_id).to.equal(1)
-        expect(data[0].teams).to.be.deep.equal({a: 'b', c: 'd'})
+        expect(data[0].teams).to.be.deep.equal({ a: 'b', c: 'd' })
         expect(data[0].games).to.be.deep.equal(['a', 'b', 'b'])
         expect(data[0].winners).to.be.deep.equal(['a', 'b'])
       })
@@ -733,7 +733,7 @@ describe('Feathers Cassandra service', () => {
         expect(data).to.be.instanceof(Array)
         expect(data.length).to.equal(1)
         expect(data[0].people_id).to.equal(1)
-        expect(data[0].teams).to.be.deep.equal({a: 'b', c: 'd'})
+        expect(data[0].teams).to.be.deep.equal({ a: 'b', c: 'd' })
         expect(data[0].games).to.be.deep.equal(['a', 'b', 'b'])
         expect(data[0].winners).to.be.deep.equal(['a', 'b'])
       })
@@ -745,13 +745,13 @@ describe('Feathers Cassandra service', () => {
         room_id: 3,
         time: 3,
         admin: false,
-        teams: {a: 'b', c: 'd'},
+        teams: { a: 'b', c: 'd' },
         games: ['a', 'b', 'b'],
         winners: ['a', 'b', 'b']
       }).then(data => {
         expect(data).to.be.ok
         expect(data.people_id).to.equal(3)
-        expect(data.teams).to.be.deep.equal({a: 'b', c: 'd'})
+        expect(data.teams).to.be.deep.equal({ a: 'b', c: 'd' })
         expect(data.games).to.be.deep.equal(['a', 'b', 'b'])
         expect(data.winners).to.be.deep.equal(['a', 'b'])
       })
@@ -760,13 +760,13 @@ describe('Feathers Cassandra service', () => {
     it('update', () => {
       return peopleRooms().update([1, 1, 1], {
         admin: false,
-        teams: {b: 'c', d: 'e'},
+        teams: { b: 'c', d: 'e' },
         games: ['b', 'c', 'c'],
         winners: ['b', 'c', 'c']
       }).then(data => {
         expect(data).to.be.ok
         expect(data.people_id).to.equal(1)
-        expect(data.teams).to.be.deep.equal({b: 'c', d: 'e'})
+        expect(data.teams).to.be.deep.equal({ b: 'c', d: 'e' })
         expect(data.games).to.be.deep.equal(['b', 'c', 'c'])
         expect(data.winners).to.be.deep.equal(['b', 'c'])
       })
@@ -775,12 +775,12 @@ describe('Feathers Cassandra service', () => {
     it('update with $add', () => {
       return peopleRooms().update([1, 1, 1], {
         admin: false,
-        teams: {$add: {b: 'c', d: 'e'}},
-        games: {$add: ['b', 'c', 'c']},
-        winners: {$add: ['b', 'c', 'c']}
+        teams: { $add: { b: 'c', d: 'e' } },
+        games: { $add: ['b', 'c', 'c'] },
+        winners: { $add: ['b', 'c', 'c'] }
       }).then(data => {
         expect(data).to.be.ok
-        expect(data.teams).to.be.deep.equal({a: 'b', c: 'd', b: 'c', d: 'e'})
+        expect(data.teams).to.be.deep.equal({ a: 'b', c: 'd', b: 'c', d: 'e' })
         expect(data.games).to.be.deep.equal(['a', 'b', 'b', 'b', 'c', 'c'])
         expect(data.winners).to.be.deep.equal(['a', 'b', 'c'])
       })
@@ -789,12 +789,12 @@ describe('Feathers Cassandra service', () => {
     it('update with $remove', () => {
       return peopleRooms().update([1, 1, 1], {
         admin: false,
-        teams: {$remove: ['a', 'z']},
-        games: {$remove: ['b', 'z']},
-        winners: {$remove: ['b', 'z']}
+        teams: { $remove: ['a', 'z'] },
+        games: { $remove: ['b', 'z'] },
+        winners: { $remove: ['b', 'z'] }
       }).then(data => {
         expect(data).to.be.ok
-        expect(data.teams).to.be.deep.equal({c: 'd'})
+        expect(data.teams).to.be.deep.equal({ c: 'd' })
         expect(data.games).to.be.deep.equal(['a'])
         expect(data.winners).to.be.deep.equal(['a'])
       })
@@ -803,9 +803,9 @@ describe('Feathers Cassandra service', () => {
     it('update with $remove to null', () => {
       return peopleRooms().update([1, 1, 1], {
         admin: false,
-        teams: {$remove: ['a', 'c']},
-        games: {$remove: ['a', 'b']},
-        winners: {$remove: ['a', 'b']}
+        teams: { $remove: ['a', 'c'] },
+        games: { $remove: ['a', 'b'] },
+        winners: { $remove: ['a', 'b'] }
       }).then(data => {
         expect(data).to.be.ok
         expect(data.teams).to.equal(null)
@@ -816,12 +816,12 @@ describe('Feathers Cassandra service', () => {
 
     it('patch', () => {
       return peopleRooms().patch([1, 1, 1], {
-        teams: {b: 'c', d: 'e'},
+        teams: { b: 'c', d: 'e' },
         games: ['b', 'c', 'c'],
         winners: ['b', 'c', 'c']
       }).then(data => {
         expect(data).to.be.ok
-        expect(data.teams).to.be.deep.equal({b: 'c', d: 'e'})
+        expect(data.teams).to.be.deep.equal({ b: 'c', d: 'e' })
         expect(data.games).to.be.deep.equal(['b', 'c', 'c'])
         expect(data.winners).to.be.deep.equal(['b', 'c'])
       })
@@ -829,12 +829,12 @@ describe('Feathers Cassandra service', () => {
 
     it('patch with $add', () => {
       return peopleRooms().patch([1, 1, 1], {
-        teams: {$add: {b: 'c', d: 'e'}},
-        games: {$add: ['b', 'c', 'c']},
-        winners: {$add: ['b', 'c', 'c']}
+        teams: { $add: { b: 'c', d: 'e' } },
+        games: { $add: ['b', 'c', 'c'] },
+        winners: { $add: ['b', 'c', 'c'] }
       }).then(data => {
         expect(data).to.be.ok
-        expect(data.teams).to.be.deep.equal({a: 'b', c: 'd', b: 'c', d: 'e'})
+        expect(data.teams).to.be.deep.equal({ a: 'b', c: 'd', b: 'c', d: 'e' })
         expect(data.games).to.be.deep.equal(['a', 'b', 'b', 'b', 'c', 'c'])
         expect(data.winners).to.be.deep.equal(['a', 'b', 'c'])
       })
@@ -842,12 +842,12 @@ describe('Feathers Cassandra service', () => {
 
     it('patch with $remove', () => {
       return peopleRooms().patch([1, 1, 1], {
-        teams: {$remove: ['a', 'z']},
-        games: {$remove: ['b', 'z']},
-        winners: {$remove: ['b', 'z']}
+        teams: { $remove: ['a', 'z'] },
+        games: { $remove: ['b', 'z'] },
+        winners: { $remove: ['b', 'z'] }
       }).then(data => {
         expect(data).to.be.ok
-        expect(data.teams).to.be.deep.equal({c: 'd'})
+        expect(data.teams).to.be.deep.equal({ c: 'd' })
         expect(data.games).to.be.deep.equal(['a'])
         expect(data.winners).to.be.deep.equal(['a'])
       })
@@ -855,9 +855,9 @@ describe('Feathers Cassandra service', () => {
 
     it('patch with $remove to null', () => {
       return peopleRooms().patch([1, 1, 1], {
-        teams: {$remove: ['a', 'c']},
-        games: {$remove: ['a', 'b']},
-        winners: {$remove: ['a', 'b']}
+        teams: { $remove: ['a', 'c'] },
+        games: { $remove: ['a', 'b'] },
+        winners: { $remove: ['a', 'b'] }
       }).then(data => {
         expect(data).to.be.ok
         expect(data.teams).to.equal(null)
@@ -1097,7 +1097,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('before_update hook replace a value', () => {
-      return peopleMv().update(1, {name: 'Replace'}).then(data => {
+      return peopleMv().update(1, { name: 'Replace' }).then(data => {
         expect(data).to.be.ok
         expect(data.id).to.equal(1)
         expect(data.name).to.equal('Default')
@@ -1105,7 +1105,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('before_update hook throws an error', () => {
-      return peopleMv().update(1, {name: 'Forbidden'}).then(() => {
+      return peopleMv().update(1, { name: 'Forbidden' }).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok
@@ -1115,7 +1115,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     it('after_update hook throws an error', () => {
-      return peopleMv().update(1, {name: 'ForbiddenAfter'}).then(() => {
+      return peopleMv().update(1, { name: 'ForbiddenAfter' }).then(() => {
         throw new Error('Should never get here')
       }).catch(function (error) {
         expect(error).to.be.ok

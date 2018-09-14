@@ -62,9 +62,9 @@ prepare(async done => {
   const models = ExpressCassandra.createClient({
     clientOptions: {
       contactPoints: ['127.0.0.1'],
-      protocolOptions: {port: 9042},
+      protocolOptions: { port: 9042 },
       keyspace: KEYSPACE,
-      queryOptions: {consistency: ExpressCassandra.consistencies.one}
+      queryOptions: { consistency: ExpressCassandra.consistencies.one }
     },
     ormOptions: {
       defaultReplicationStrategy: {

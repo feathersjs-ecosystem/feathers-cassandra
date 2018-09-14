@@ -1,6 +1,6 @@
 const Proto = require('uberproto')
 const TimeUuid = require('cassandra-driver').types.TimeUuid
-const {filterQuery} = require('@feathersjs/commons')
+const { filterQuery } = require('@feathersjs/commons')
 const errors = require('@feathersjs/errors')
 const flatten = require('arr-flatten')
 const isPlainObject = require('is-plain-object')
@@ -128,7 +128,7 @@ class Service {
         if (!ids) {
           if (idList) {
             if (idList[index]) {
-              query[idKey] = idList[index].length > 1 ? {$in: idList[index]} : idList[index]
+              query[idKey] = idList[index].length > 1 ? { $in: idList[index] } : idList[index]
             }
           } else {
             query[idKey] = null
@@ -140,7 +140,7 @@ class Service {
         }
       })
     } else {
-      query[`${this.id}`] = idList ? (idList.length === 1 ? idList[0] : {$in: idList}) : id
+      query[`${this.id}`] = idList ? (idList.length === 1 ? idList[0] : { $in: idList }) : id
     }
 
     return query
@@ -313,7 +313,7 @@ class Service {
   }
 
   createQuery (params = {}) {
-    const {filters, query} = filterQuery(params.query || {}, {operators: QUERY_OPERATORS})
+    const { filters, query } = filterQuery(params.query || {}, { operators: QUERY_OPERATORS })
     let q = this._createQuery(params)
 
     // $select uses a specific find syntax, so it has to come first.
@@ -326,11 +326,11 @@ class Service {
 
         if (ttlMatch) {
           const fieldName = ttlMatch[1]
-          q.ttl({[fieldName]: fieldName + '_ttl'})
+          q.ttl({ [fieldName]: fieldName + '_ttl' })
           fieldsToRemove.push(field)
         } else if (writetimeMatch) {
           const fieldName = writetimeMatch[1]
-          q.writetime({[fieldName]: fieldName + '_writetime'})
+          q.writetime({ [fieldName]: fieldName + '_writetime' })
           fieldsToRemove.push(field)
         }
       }
@@ -456,7 +456,7 @@ class Service {
   _find (params, count, getFilter = filterQuery) {
     let allowFiltering = false
     let filtersQueue = null
-    const {filters, query} = getFilter(params.query || {}, {operators: QUERY_OPERATORS})
+    const { filters, query } = getFilter(params.query || {}, { operators: QUERY_OPERATORS })
     const materializedView = this.getMaterializedView(query, this.materializedViews)
     const q = this.createQuery(params)
 
@@ -540,7 +540,7 @@ class Service {
         ? params.paginate
         : this.paginate
     const result = this._find(params, !!paginate.default, query =>
-      filterQuery(query, {paginate, operators: QUERY_OPERATORS})
+      filterQuery(query, { paginate, operators: QUERY_OPERATORS })
     )
 
     if (!paginate.default) {
@@ -553,7 +553,7 @@ class Service {
   _get (id, params) {
     const query = Object.assign({}, params.query, this.getIdsQuery(id))
 
-    return this._find(Object.assign({}, params, {query}))
+    return this._find(Object.assign({}, params, { query }))
       .then(page => {
         if (page.data.length !== 1) {
           throw new errors.NotFound(`No record found for id '${id}'`)
@@ -771,7 +771,7 @@ class Service {
 
     if (beforeHook && beforeHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in before_update lifecycle function') }
 
-    let query = filterQuery(params.query || {}, {operators: QUERY_OPERATORS}).query
+    let query = filterQuery(params.query || {}, { operators: QUERY_OPERATORS }).query
     const dataCopy = Object.assign({}, data)
 
     const mapIds = page => Array.isArray(this.id)
@@ -822,7 +822,7 @@ class Service {
           query: Object.assign(
             {},
             this.getIdsQuery(id, idList),
-            params.query && params.query.$select ? {$select: params.query.$select} : {}
+            params.query && params.query.$select ? { $select: params.query.$select } : {}
           )
         })
 
@@ -880,7 +880,7 @@ class Service {
       }
     }
 
-    const {query: queryParams} = filterQuery(params.query || {}, {operators: QUERY_OPERATORS})
+    const { query: queryParams } = filterQuery(params.query || {}, { operators: QUERY_OPERATORS })
     const query = this._createQuery(params, 'delete')
 
     this.objectify(query, queryParams)
