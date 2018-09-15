@@ -1,11 +1,11 @@
 const createModel = require('./people-mv.model')
 const createService = require('../src')
 
-module.exports = function () {
-  const app = this
+module.exports = function (app) {
+  const Model = createModel(app)
 
   const options = {
-    model: createModel(app),
+    model: Model,
     materializedViews: [
       {
         keys: ['name'],

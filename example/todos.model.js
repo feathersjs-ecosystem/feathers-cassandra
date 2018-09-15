@@ -3,12 +3,7 @@ module.exports = function (app) {
   const TodoModel = models.loadSchema('Todo', {
     table_name: 'todos',
     fields: {
-      id: {
-        type: 'int',
-        rule: {
-          required: true,
-        }
-      },
+      id: 'int',
       text: {
         type: 'text',
         rule: {
@@ -71,17 +66,17 @@ module.exports = function (app) {
     after_save: function (instance, options) {
       return true
     },
-    before_update: function (queryObject, updateValues, options) {
+    before_update: function (queryObject, updateValues, options, id) {
       updateValues.complete = true
       return true
     },
-    after_update: function (queryObject, updateValues, options) {
+    after_update: function (queryObject, updateValues, options, id) {
       return true
     },
-    before_delete: function (queryObject, options) {
+    before_delete: function (queryObject, options, id) {
       return true
     },
-    after_delete: function (queryObject, options) {
+    after_delete: function (queryObject, options, id) {
       return true
     }
   }, function (err) {

@@ -1,12 +1,12 @@
 const createModel = require('./people-rooms-custom-id-separator.model')
 const createService = require('../src')
 
-module.exports = function () {
-  const app = this
+module.exports = function (app) {
+  const Model = createModel(app)
 
   const options = {
+    model: Model,
     idSeparator: '.',
-    model: createModel(app),
     events: ['testing']
   }
 
