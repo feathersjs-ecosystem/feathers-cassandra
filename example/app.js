@@ -1,6 +1,7 @@
 const feathers = require('@feathersjs/feathers')
 const express = require('@feathersjs/express')
 const rest = require('@feathersjs/express/rest')
+const errorHandler = require('@feathersjs/express/errors');
 const bodyParser = require('body-parser')
 const cassandra = require('./cassandra')
 const services = require('./services')
@@ -17,9 +18,8 @@ const app = express(feathers())
 app.configure(cassandra)
 app.configure(services)
 
-app.use(function (error, req, res, next) {
-  res.json(error)
-})
+// Handle Errors
+app.use(errorHandler())
 
 // Start the server
 module.exports = app.listen(3030)
