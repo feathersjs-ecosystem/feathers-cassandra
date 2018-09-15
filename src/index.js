@@ -91,6 +91,7 @@ class Service {
     this.events = options.events || []
     this.materializedViews = options.materializedViews || []
     this.Model = options.model
+    this.modelOptions = this.Model._properties.schema.options || {}
     this.filters = options.model._properties.schema.filters || {}
   }
 
@@ -191,8 +192,7 @@ class Service {
   }
 
   setTimestampFields (data, updatedAt, createdAt) {
-    const modelOptions = this.Model._properties.schema.options || {}
-    const timestamps = modelOptions.timestamps
+    const timestamps = this.modelOptions.timestamps
 
     if (timestamps) {
       const now = new Date().toISOString()
@@ -209,8 +209,7 @@ class Service {
   }
 
   setVersionField (data) {
-    const modelOptions = this.Model._properties.schema.options || {}
-    const versions = modelOptions.versions
+    const versions = this.modelOptions.versions
 
     if (versions) {
       const timeuuidVersion = TimeUuid.now()
@@ -635,12 +634,15 @@ class Service {
   _update (id, data, params, oldData) {
     const modelFields = this.Model._properties.schema.fields
     const fields = Object.keys(oldData || modelFields)
+    const createdAtField = this.modelOptions.timestamps && this.modelOptions.timestamps.createdAt
     let newObject = {}
 
     // Set missing fields to null
     for (const key of fields) {
       if (data[key] === undefined) {
-        newObject[key] = null
+        if (!createdAtField || key !== createdAtField) {
+          newObject[key] = null
+        }
       } else {
         newObject[key] = data[key]
       }
@@ -678,6 +680,10 @@ class Service {
 
     return this.exec(q)
       .then(() => {
+        // Restore the createdAt field so we can return it to the client
+        if (createdAtField && !newObject[createdAtField] && oldData)
+          newObject[createdAtField] = oldData[createdAtField]
+
         // Restore the id field so we can return it to the client
         if (Array.isArray(this.id)) {
           newObject = Object.assign({}, newObject, this.getIdsQuery(id))

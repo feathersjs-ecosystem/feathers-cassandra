@@ -17,6 +17,10 @@ const app = express(feathers())
 app.configure(cassandra)
 app.configure(services)
 
+app.use(function (error, req, res, next) {
+  res.json(error)
+})
+
 // Start the server
 module.exports = app.listen(3030)
 
