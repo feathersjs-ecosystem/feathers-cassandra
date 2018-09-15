@@ -34,41 +34,41 @@ the benefits of the Express-Cassandra ORM.
 
 ###### Query Operators
 
-* $ne *!=* - Applicable for IF conditions only `id: { $ne: 1 }`
-* $isnt *IS NOT* - Applicable for materialized view filters only `id: { $isnt: 1 }`
-* $gt *>* `id: { $ne: 1 }`
-* $lt *<* `id: { $lt: 1 }`
-* $gte *>=* `id: { $gte: 1 }`
-* $lte *<=* `id: { $lte: 1 }`
-* $in *IN* `id: { $in: [1, 2] }`
-* $like *LIKE* - Applicable for SASI indexes only `text: { $like: '%abc%' }`
+* **$ne** *!=* - Applicable for IF conditions only `id: { $ne: 1 }`
+* **$isnt** *IS NOT* - Applicable for materialized view filters only `id: { $isnt: 1 }`
+* **$gt** *>* `id: { $ne: 1 }`
+* **$lt** *<* `id: { $lt: 1 }`
+* **$gte** *>=* `id: { $gte: 1 }`
+* **$lte** *<=* `id: { $lte: 1 }`
+* **$in** *IN* `id: { $in: [1, 2] }`
+* **$like** *LIKE* - Applicable for SASI indexes only `text: { $like: '%abc%' }`
 
 ###### Cassandra Query Operators
 
-* $token *TOKEN* - Token query on primary keys. can be used for pagination - Single key: `$token: { id: { $gt: 1 } }` Multiple keys: `$token: { $keys: ['id', 'time'], $condition: { $gt: [1, 2] } }`  
-* $contains *CONTAINS* - Search in indexed list, set or map `colors: { $contains: 'blue' }`
-* $containsKey *CONTAINS KEY* - Search in indexed map `colors: { $containsKey: 'dark' }`
-* $if *IF* - Condition that must return TRUE for the update to succeed `$if: { name: 'John' }`
-* $ifExists *IF EXISTS* - Make the UPDATE fail when rows don't match the WHERE conditions `$ifExists: true`
-* $ifNotExists *IF NOT EXISTS* - Inserts a new row of data if no rows match the PRIMARY KEY values `$ifNotExists: true`
-* $allowFiltering *ALLOW FILTERING* - Provides the capability to query the clustering columns using any condition `$allowFiltering: true`
-* $limit *LIMIT* - Sets the maximum number of rows that the query returns `$limit: 2`
-* $limitPerPartition *PER PARTITION LIMIT* - Sets the maximum number of rows that the query returns from each partition `$limitPerPartition: true`
-* $ttl *USING TTL* - Sets a time in seconds for data in a column to expire. use in create, update & patch requests `$ttl: 60`
-* $timestamp *USING TIMESTAMP* - Sets a timestamp for data in a column to expire. use in create, update & patch requests `$timestamp: 1537017312928000`
+* **$token** *TOKEN* - Token query on primary keys. can be used for pagination - Single key: `$token: { id: { $gt: 1 } }` Multiple keys: `$token: { $keys: ['id', 'time'], $condition: { $gt: [1, 2] } }`  
+* **$contains** *CONTAINS* - Search in indexed list, set or map `colors: { $contains: 'blue' }`
+* **$containsKey** *CONTAINS KEY* - Search in indexed map `colors: { $containsKey: 'dark' }`
+* **$if** *IF* - Condition that must return TRUE for the update to succeed `$if: { name: 'John' }`
+* **$ifExists** *IF EXISTS* - Make the UPDATE fail when rows don't match the WHERE conditions `$ifExists: true`
+* **$ifNotExists** *IF NOT EXISTS* - Inserts a new row of data if no rows match the PRIMARY KEY values `$ifNotExists: true`
+* **$allowFiltering** *ALLOW FILTERING* - Provides the capability to query the clustering columns using any condition `$allowFiltering: true`
+* **$limit** *LIMIT* - Sets the maximum number of rows that the query returns `$limit: 2`
+* **$limitPerPartition** *PER PARTITION LIMIT* - Sets the maximum number of rows that the query returns from each partition `$limitPerPartition: true`
+* **$ttl** *USING TTL* - Sets a time in seconds for data in a column to expire. use in create, update & patch requests `$ttl: 60`
+* **$timestamp** *USING TIMESTAMP* - Sets a timestamp for data in a column to expire. use in create, update & patch requests `$timestamp: 1537017312928000`
 
 ###### Special Query Operators
 
-* $select - Sets fields to return. supports reading WRITETIME & TTL of a field `$select: ['id', 'name', 'writetime(name)', 'ttl(name)']`
-* $noSelect - Skips SELECT queries in create, update, patch & remove requests. Response data will be based on the input data `$noSelect: true`
-* $filters - Sets Model's CassanKnex filters to run on a get or find request `$filters: ['completed', 'recent']`
+* **$select** - Sets fields to return. supports reading WRITETIME & TTL of a field `$select: ['id', 'name', 'writetime(name)', 'ttl(name)']`
+* **$noSelect** - Skips SELECT queries in create, update, patch & remove requests. Response data will be based on the input data `$noSelect: true`
+* **$filters** - Sets Model's CassanKnex filters to run on a get or find request `$filters: ['completed', 'recent']`
 
 ###### Cassandra Data Operators
 
-* $add - Adds to a list, set or map - List/Set: `colors: { $add: ['blue', 'red'] }` Map: `colors: { $add: { dark: 'blue', bright: 'red' } }`
-* $remove - Removes from a list, set or map - List/Set: `colors: { $remove: ['blue', 'red'] }` Map: `colors: { $remove: ['dark', 'bright'] }`
-* $increment - Increments a counter `days: { $increments: 2 }`
-* $decrement - Decrements a counter `days: { $decrements: 2 }`
+* **$add** - Adds to a list, set or map - List/Set: `colors: { $add: ['blue', 'red'] }` Map: `colors: { $add: { dark: 'blue', bright: 'red' } }`
+* **$remove** - Removes from a list, set or map - List/Set: `colors: { $remove: ['blue', 'red'] }` Map: `colors: { $remove: ['dark', 'bright'] }`
+* **$increment** - Increments a counter `days: { $increments: 2 }`
+* **$decrement** - Decrements a counter `days: { $decrements: 2 }`
 
 ### Materialized Views
 
