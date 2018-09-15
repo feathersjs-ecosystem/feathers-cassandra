@@ -1130,6 +1130,10 @@ describe('Feathers Cassandra service', () => {
         expect(data.teams).to.be.deep.equal({ b: 'c', d: 'e' })
         expect(data.games).to.be.deep.equal(['b', 'c', 'c'])
         expect(data.winners).to.be.deep.equal(['b', 'c'])
+        expect(data.created_at).to.be.ok
+        expect(data.updated_at).to.be.ok
+        expect(data.created_at.toString()).to.not.equal(data.updated_at.toString())
+        expect(data._version).to.be.ok
       })
     })
 

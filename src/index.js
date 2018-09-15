@@ -681,8 +681,7 @@ class Service {
     return this.exec(q)
       .then(() => {
         // Restore the createdAt field so we can return it to the client
-        if (createdAtField && !newObject[createdAtField] && oldData)
-          newObject[createdAtField] = oldData[createdAtField]
+        if (createdAtField && !newObject[createdAtField] && oldData) { newObject[createdAtField] = oldData[createdAtField] }
 
         // Restore the id field so we can return it to the client
         if (Array.isArray(this.id)) {
