@@ -19,9 +19,9 @@ module.exports = function (app) {
     }
   })
 
-  app.set('models', models)
-
   const cassandraClient = models.orm.get_system_client()
+
+  app.set('models', models)
 
   cassandraClient.connect(err => {
     if (err) throw err
