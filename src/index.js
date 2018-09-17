@@ -377,19 +377,21 @@ class Service {
       if (!methodKey || methodKey !== '$remove' || fieldType !== 'map') {
         if (methodKey === '$increment' || methodKey === '$decrement') { value = Number(value) }
 
-        let valueToValidate = methodKey ? value[methodKey] : value;
+        let valueToValidate = methodKey ? value[methodKey] : value
 
-        if (fieldType === 'timeuuid' && !(valueToValidate instanceof types.TimeUuid)) {
-          valueToValidate = types.TimeUuid.fromString(valueToValidate.toString())
-        } else if (fieldType === 'uuid' && !(valueToValidate instanceof types.Uuid)) {
-          valueToValidate = types.Uuid.fromString(valueToValidate.toString())
+        if (valueToValidate) {
+          if (fieldType === 'timeuuid' && !(valueToValidate instanceof types.TimeUuid)) {
+            valueToValidate = types.TimeUuid.fromString(valueToValidate.toString())
+            data[field] = valueToValidate
+          } else if (fieldType === 'uuid' && !(valueToValidate instanceof types.Uuid)) {
+            valueToValidate = types.Uuid.fromString(valueToValidate.toString())
+            data[field] = valueToValidate
+          }
         }
 
         const validated = model.validate(field, valueToValidate)
 
         if (validated !== true) { throw new errors.BadRequest(validated()) }
-
-        data[field] = valueToValidate
       }
     }
   }

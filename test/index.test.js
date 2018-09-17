@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 /* eslint-disable no-unused-expressions */
 const { expect } = require('chai')
-const TimeUuid = require('cassandra-driver').types.TimeUuid
+const types = require('cassandra-driver').types
 const { prepare, refs } = require('./prepare')
 const assert = require('assert')
 const { base, example } = require('./lib/feathers-service-tests')
@@ -1022,7 +1022,9 @@ describe('Feathers Cassandra service', () => {
             admin: false,
             teams: { a: 'b', c: 'd' },
             games: ['a', 'b', 'b'],
-            winners: ['a', 'b', 'b']
+            winners: ['a', 'b', 'b'],
+            uuid: 'd9e41929-2e9a-4619-bb06-b07fa7ef1461',
+            timeuuid: '66260eb0-ba6a-11e8-b27a-c6c477aea255'
           },
           {
             people_id: 2,
@@ -1031,7 +1033,9 @@ describe('Feathers Cassandra service', () => {
             admin: false,
             teams: { x: 'x', y: 'y' },
             games: ['x', 'y', 'y'],
-            winners: ['x', 'y', 'y']
+            winners: ['x', 'y', 'y'],
+            uuid: types.Uuid.fromString('d9e41929-2e9a-4619-bb06-b07fa7ef1462'),
+            timeuuid: types.TimeUuid.fromString('b48af500-ba6c-11e8-b1b4-1503c0dbeff1')
           }
         ])
     })
@@ -1055,6 +1059,14 @@ describe('Feathers Cassandra service', () => {
         expect(data.teams).to.be.deep.equal({ a: 'b', c: 'd' })
         expect(data.games).to.be.deep.equal(['a', 'b', 'b'])
         expect(data.winners).to.be.deep.equal(['a', 'b'])
+        expect(data.uuid.toString()).to.equal('d9e41929-2e9a-4619-bb06-b07fa7ef1461')
+        expect(data.timeuuid.toString()).to.equal('66260eb0-ba6a-11e8-b27a-c6c477aea255')
+
+        return peopleRooms.get([2, 2, 2]).then(data => {
+          expect(data).to.be.ok
+          expect(data.uuid.toString()).to.equal('d9e41929-2e9a-4619-bb06-b07fa7ef1462')
+          expect(data.timeuuid.toString()).to.equal('b48af500-ba6c-11e8-b1b4-1503c0dbeff1')
+        })
       })
     })
 
@@ -1389,7 +1401,7 @@ describe('Feathers Cassandra service', () => {
       return peopleRooms.get([1, 1, 1]).then(data => {
         expect(data).to.be.ok
         expect(data.people_id).to.equal(1)
-        expect(data._version).to.be.instanceof(TimeUuid)
+        expect(data._version).to.be.instanceof(types.TimeUuid)
         expect(data.created_at).to.be.instanceof(Date)
         expect(data.updated_at).to.be.instanceof(Date)
       })
@@ -1405,7 +1417,7 @@ describe('Feathers Cassandra service', () => {
           return peopleMv.get(1).then(data => {
             expect(data).to.be.ok
             expect(data.name).to.equal('Dave')
-            expect(data.__v).to.be.instanceof(TimeUuid)
+            expect(data.__v).to.be.instanceof(types.TimeUuid)
             expect(data.createdAt).to.be.instanceof(Date)
             expect(data.updatedAt).to.be.instanceof(Date)
           })
