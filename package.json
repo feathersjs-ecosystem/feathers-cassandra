@@ -72,7 +72,7 @@
     "babel-preset-env": "^1.7.0",
     "body-parser": "^1.18.3",
     "cassandra-driver": "^3.5.0",
-    "cassanknex": "git+https://github.com/dekelev/cassanknex.git#fixed",
+    "cassanknex": "^1.18.0",
     "chai": "^4.1.2",
     "coveralls": "^3.0.2",
     "express-cassandra": "^2.2.3",

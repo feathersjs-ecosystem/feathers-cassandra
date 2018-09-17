@@ -15,7 +15,7 @@
 ```bash
 npm install --save feathers-cassandra
 npm install --save express-cassandra
-npm install --save git+https://github.com/dekelev/cassanknex.git#fixed
+npm install --save cassanknex
 ```
 
 ## Documentation
