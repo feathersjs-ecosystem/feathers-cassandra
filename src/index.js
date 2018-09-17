@@ -380,12 +380,18 @@ class Service {
         let valueToValidate = methodKey ? value[methodKey] : value
 
         if (valueToValidate) {
-          if (fieldType === 'timeuuid' && !(valueToValidate instanceof types.TimeUuid)) {
-            valueToValidate = types.TimeUuid.fromString(valueToValidate.toString())
-            data[field] = valueToValidate
-          } else if (fieldType === 'uuid' && !(valueToValidate instanceof types.Uuid)) {
-            valueToValidate = types.Uuid.fromString(valueToValidate.toString())
-            data[field] = valueToValidate
+          if (fieldType === 'timeuuid') {
+            if (valueToValidate instanceof types.TimeUuid || Buffer.isBuffer(valueToValidate)) {
+              data[field] = valueToValidate.toString()
+            } else {
+              valueToValidate = types.TimeUuid.fromString(valueToValidate.toString())
+            }
+          } else if (fieldType === 'uuid') {
+            if (valueToValidate instanceof types.Uuid || Buffer.isBuffer(valueToValidate)) {
+              data[field] = valueToValidate.toString()
+            } else {
+              valueToValidate = types.Uuid.fromString(valueToValidate.toString())
+            }
           }
         }
 
