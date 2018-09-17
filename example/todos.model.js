@@ -28,7 +28,8 @@ module.exports = function (app) {
       winners: {
         type: 'set',
         typeDef: '<varchar>'
-      }
+      },
+      uuid: 'uuid'
     },
     key: ['id'],
     custom_indexes: [

@@ -183,10 +183,6 @@ class Service {
           query[METHODS[key]](field, key === '$add' && Array.isArray(fieldValue) ? [fieldValue] : fieldValue)
           removeKey = true
         }
-      } else if (value instanceof types.Uuid && !(value instanceof types.TimeUuid)) {
-        data[field] = types.Uuid.toString(value)
-      } else if (Buffer.isBuffer(value)) {
-        data[field] = value.toString()
       }
 
       if (removeKey) {
@@ -381,9 +377,19 @@ class Service {
       if (!methodKey || methodKey !== '$remove' || fieldType !== 'map') {
         if (methodKey === '$increment' || methodKey === '$decrement') { value = Number(value) }
 
-        const validated = model.validate(field, methodKey ? value[methodKey] : value)
+        let valueToValidate = methodKey ? value[methodKey] : value;
+
+        if (fieldType === 'timeuuid' && !(valueToValidate instanceof types.TimeUuid)) {
+          valueToValidate = types.TimeUuid.fromString(valueToValidate.toString())
+        } else if (fieldType === 'uuid' && !(valueToValidate instanceof types.Uuid)) {
+          valueToValidate = types.Uuid.fromString(valueToValidate.toString())
+        }
+
+        const validated = model.validate(field, valueToValidate)
 
         if (validated !== true) { throw new errors.BadRequest(validated()) }
+
+        data[field] = valueToValidate
       }
     }
   }
@@ -595,16 +601,6 @@ class Service {
       if (params.query.$timestamp) {
         q.usingTimestamp(params.query.$timestamp)
         delete params.query.$timestamp
-      }
-    }
-
-    for (const field of Object.keys(data)) {
-      let value = data[field]
-
-      if (value instanceof types.Uuid && !(value instanceof types.TimeUuid)) {
-        data[field] = types.Uuid.toString(value)
-      } else if (Buffer.isBuffer(value)) {
-        data[field] = value.toString()
       }
     }
 
