@@ -1,5 +1,5 @@
 const Proto = require('uberproto')
-const TimeUuid = require('cassandra-driver').types.TimeUuid
+const types = require('cassandra-driver').types
 const { filterQuery } = require('@feathersjs/commons')
 const errors = require('@feathersjs/errors')
 const flatten = require('arr-flatten')
@@ -183,6 +183,10 @@ class Service {
           query[METHODS[key]](field, key === '$add' && Array.isArray(fieldValue) ? [fieldValue] : fieldValue)
           removeKey = true
         }
+      } else if (value instanceof types.Uuid && !(value instanceof types.TimeUuid)) {
+        data[field] = types.Uuid.toString(value)
+      } else if (Buffer.isBuffer(value)) {
+        data[field] = value.toString()
       }
 
       if (removeKey) {
@@ -212,7 +216,7 @@ class Service {
     const versions = this.modelOptions.versions
 
     if (versions) {
-      const timeuuidVersion = TimeUuid.now()
+      const timeuuidVersion = types.TimeUuid.now()
       const versionFieldName = '__v'
 
       data[typeof versions.key === 'string' ? versions.key : versionFieldName] = timeuuidVersion
@@ -591,6 +595,16 @@ class Service {
       if (params.query.$timestamp) {
         q.usingTimestamp(params.query.$timestamp)
         delete params.query.$timestamp
+      }
+    }
+
+    for (const field of Object.keys(data)) {
+      let value = data[field]
+
+      if (value instanceof types.Uuid && !(value instanceof types.TimeUuid)) {
+        data[field] = types.Uuid.toString(value)
+      } else if (Buffer.isBuffer(value)) {
+        data[field] = value.toString()
       }
     }
 
