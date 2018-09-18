@@ -1,6 +1,6 @@
 {
   "name": "feathers-cassandra",
-  "description": "Feathers service adapter for Cassandra based on Express-Cassandra ORM and CassanKnex query builder",
+  "description": "Feathers service adapter for Cassandra DB based on Express-Cassandra ORM and CassanKnex query builder",
   "version": "1.0.4",
   "homepage": "https://github.com/dekelev/feathers-cassandra",
   "keywords": [
