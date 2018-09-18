@@ -127,7 +127,7 @@ class Service {
         if (!ids) {
           if (idList) {
             if (idList[index]) {
-              query[idKey] = idList[index].length > 1 ? { $in: idList[index] } : idList[index]
+              query[idKey] = idList[index].length === 1 ? idList[index] : { $in: idList[index] }
             }
           } else {
             query[idKey] = null
@@ -503,7 +503,6 @@ class Service {
             data: res.rows
           }
         })
-        .catch(errorHandler)
     }
 
     if (filters.$limit === 0) {
@@ -532,7 +531,9 @@ class Service {
       this.objectify(countQuery, query)
 
       return this.exec(countQuery)
-        .then(res => executeQuery(res).catch(errorHandler))
+        .then(res => {
+          return executeQuery(res)
+        })
         .catch(errorHandler)
     }
 
@@ -570,7 +571,6 @@ class Service {
 
         return page.data[0]
       })
-      .catch(errorHandler)
   }
 
   /**
@@ -754,7 +754,6 @@ class Service {
           if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function') }
           return data
         })
-        .catch(errorHandler)
     }
 
     return this._get(id, params)
@@ -764,9 +763,7 @@ class Service {
             if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function') }
             return data
           })
-          .catch(errorHandler)
       })
-      .catch(errorHandler)
   }
 
   /**
@@ -863,11 +860,8 @@ class Service {
 
                 return items
               })
-              .catch(errorHandler)
           })
-          .catch(errorHandler)
-      }
-      )
+      })
       .catch(errorHandler)
   }
 
@@ -926,7 +920,6 @@ class Service {
 
               return items
             })
-            .catch(errorHandler)
         })
         .catch(errorHandler)
     }
