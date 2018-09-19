@@ -1,7 +1,6 @@
 /* eslint-env mocha */
 /* eslint-disable no-unused-expressions */
 const { expect } = require('chai')
-const types = require('cassandra-driver').types
 const { prepare, refs } = require('./prepare')
 const assert = require('assert')
 const { base, example } = require('feathers-service-tests-cassandra')
@@ -32,6 +31,9 @@ const ERROR_CODES = {
   unprepared: 0x2500
 }
 
+let app = null
+let models = null
+let types = null
 let people = null
 let peopleMv = null
 let peopleRooms = null
@@ -41,6 +43,9 @@ describe('Feathers Cassandra service', () => {
   before(async () => {
     await prepare()
 
+    app = refs.app()
+    models = app.get('models')
+    types = models.datatypes
     people = refs.people()
     peopleMv = refs.peopleMv()
     peopleRooms = refs.peopleRooms()
@@ -1012,11 +1017,18 @@ describe('Feathers Cassandra service', () => {
   })
 
   describe('uuid & timeuuid', () => {
-    const uuid1 = types.Uuid.fromString('d9e41929-2e9a-4619-bb06-b07fa7ef1461')
-    const timeuuid1 = types.TimeUuid.fromString('66260eb0-ba6a-11e8-b27a-c6c477aea255')
+    let uuid1 = null;
+    let timeuuid1 = null
+    let uuid2 = null
+    let timeuuid2 = null
 
-    const uuid2 = types.Uuid.fromString('d9e41929-2e9a-4619-bb06-b07fa7ef1462')
-    const timeuuid2 = types.TimeUuid.fromString('b48af500-ba6c-11e8-b1b4-1503c0dbeff1')
+    before(() => {
+      uuid1 = models.uuidFromString('d9e41929-2e9a-4619-bb06-b07fa7ef1461')
+      timeuuid1 = models.timeuuidFromString('66260eb0-ba6a-11e8-b27a-c6c477aea255')
+
+      uuid2 = models.uuidFromString('d9e41929-2e9a-4619-bb06-b07fa7ef1462')
+      timeuuid2 = models.timeuuidFromString('b48af500-ba6c-11e8-b1b4-1503c0dbeff1')
+    })
 
     beforeEach(async () => {
       await peopleRooms
@@ -1083,8 +1095,8 @@ describe('Feathers Cassandra service', () => {
     it('find with object', () => {
       return peopleRooms.find({
         query: {
-          uuid: types.Uuid.fromString(uuid2.toString()),
-          timeuuid: types.TimeUuid.fromString(timeuuid2.toString()),
+          uuid: models.uuidFromString(uuid2.toString()),
+          timeuuid: models.timeuuidFromString(timeuuid2.toString()),
           $allowFiltering: true
         }
       }).then(data => {

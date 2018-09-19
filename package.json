@@ -71,7 +71,6 @@
     "babel-plugin-transform-object-assign": "^6.8.0",
     "babel-preset-env": "^1.7.0",
     "body-parser": "^1.18.3",
-    "cassandra-driver": "^3.5.0",
     "cassanknex": "^1.18.0",
     "chai": "^4.1.2",
     "coveralls": "^3.0.2",
@@ -86,7 +85,7 @@
     "standard": "^12.0.1"
   },
   "peerDependencies": {
-    "cassandra-driver": "^3.5.0"
+    "express-cassandra": "*"
   },
   "babel": {
     "plugins": [
