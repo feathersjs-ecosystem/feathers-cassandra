@@ -6,9 +6,7 @@
 [![Dependency Status](https://img.shields.io/david/dekelev/feathers-cassandra.svg)](https://david-dm.org/dekelev/feathers-cassandra)
 [![npm](https://img.shields.io/npm/v/feathers-cassandra.svg?maxAge=3600)](https://www.npmjs.com/package/feathers-cassandra)
 
-
-> Cassandra service adapter for [FeathersJS](https://feathersjs.com)
-
+[Feathers](https://feathersjs.com/) service adapter for Cassandra DB based on [Express-Cassandra](https://express-cassandra.readthedocs.io) ORM and [CassanKnex](https://github.com/azuqua/cassanknex) query builder
 
 ## Installation
 
@@ -27,8 +25,9 @@ Please refer to the [Feathers database adapter documentation](https://docs.feath
 
 Refer to the official [Express-Cassanndra documention](https://express-cassandra.readthedocs.io).
 
-It works similar to the [Knex service](https://github.com/feathersjs/feathers-knex) adapter by using [CassanKnex](https://github.com/azuqua/cassanknex), except it has all
+It works like the [Knex service](https://github.com/feathersjs/feathers-knex) adapter by using [CassanKnex](https://github.com/azuqua/cassanknex), except it has all
 the benefits of the Express-Cassandra ORM.
+
 ### Supported Operators
 
 ###### Query Operators
@@ -456,7 +455,7 @@ module.exports = app.listen(3030)
 console.log('Feathers Todo FeathersCassandra service running on 127.0.0.1:3030')
 ```
 
-You can run this example by using `node server` and going to [http://localhost:3030/todos](http://localhost:3030/todos). You should see an empty array. That's because you don't have any Todos yet but you now have full CRUD for your new todos service!
+You can run this example by using `node server` and going to [localhost:3030/todos](http://localhost:3030/todos). You should see an empty array. That's because you don't have any Todos yet but you now have full CRUD for your new todos service!
 
 ## License
 
