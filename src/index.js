@@ -1,6 +1,6 @@
 const Proto = require('uberproto')
 const types = require('cassandra-driver').types
-const { filterQuery } = require('@feathersjs/commons')
+const { filterQuery: filterQueryCommon } = require('@feathersjs/commons')
 const errors = require('@feathersjs/errors')
 const flatten = require('arr-flatten')
 const isPlainObject = require('is-plain-object')
@@ -232,6 +232,30 @@ class Service {
     return options
   }
 
+  filterQuery (query, options = {}) {
+    const filter = query => {
+      Object.keys(query).forEach(key => {
+        const value = query[key]
+
+        if (value instanceof types.Uuid || Buffer.isBuffer(value)) {
+          query[key] = value.toString()
+        } else if (Array.isArray(value)) {
+          value.forEach((fieldValue, fieldKey) => {
+            if (fieldValue instanceof types.Uuid || Buffer.isBuffer(fieldValue)) {
+              query[key][fieldKey] = fieldValue.toString()
+            }
+          })
+        } else if (isPlainObject(value)) {
+          return filter(value)
+        }
+      })
+    }
+
+    filter(query)
+
+    return filterQueryCommon(query, options)
+  }
+
   /**
    * Maps a feathers query to the CassanKnex schema builder functions.
    * @param query - a query object. i.e. { type: 'fish', age: { $lte: 5 }
@@ -248,9 +272,9 @@ class Service {
     if (params.$limitPerPartition) { delete params.$limitPerPartition }
 
     Object.keys(params || {}).forEach(key => {
-      let value = params[key]
-
       if (parentKey === '$token' && key === '$condition') { return }
+
+      let value = params[key]
 
       if (isPlainObject(value)) {
         return this.objectify(query, value, key, parentKey)
@@ -288,7 +312,7 @@ class Service {
     })
   }
 
-  _createQuery (params = {}, type) {
+  _createQuery (type) {
     let q = null
 
     if (!Service.cassanknex) {
@@ -303,9 +327,8 @@ class Service {
     return q
   }
 
-  createQuery (params = {}) {
-    const { filters, query } = filterQuery(params.query || {}, { operators: QUERY_OPERATORS })
-    let q = this._createQuery(params)
+  createQuery (filters, query) {
+    let q = this._createQuery()
 
     // $select uses a specific find syntax, so it has to come first.
     if (filters.$select) {
@@ -462,34 +485,35 @@ class Service {
     })
   }
 
-  _find (params, count, getFilter = filterQuery) {
+  _find (params, count, getFilter = this.filterQuery) {
     let allowFiltering = false
     let filtersQueue = null
     const { filters, query } = getFilter(params.query || {}, { operators: QUERY_OPERATORS })
     const materializedView = this.getMaterializedView(query, this.materializedViews)
-    const q = this.createQuery(params)
+    const q = this.createQuery(filters, query)
 
     if (materializedView) { q.from(materializedView) }
 
-    if (query.$allowFiltering) {
-      allowFiltering = true
+    if (params.query) {
+      if (params.query.$allowFiltering) {
+        allowFiltering = true
+        q.allowFiltering()
+        delete params.query.$allowFiltering
+      }
 
-      q.allowFiltering()
-      delete query.$allowFiltering
-    }
+      if (params.query.$filters) {
+        filtersQueue = this.runFilters(params, q, params.query.$filters)
+        delete params.query.$filters
+      }
 
-    if (query.$filters) {
-      filtersQueue = this.runFilters(params, q, query.$filters)
-      delete query.$filters
+      if (params.query.$limitPerPartition) {
+        q.limitPerPartition(params.query.$limitPerPartition)
+        delete params.query.$limitPerPartition
+      }
     }
 
     if (filters.$limit) {
       q.limit(filters.$limit)
-    }
-
-    if (query.$limitPerPartition) {
-      q.limitPerPartition(query.$limitPerPartition)
-      delete query.$limitPerPartition
     }
 
     let executeQuery = res => {
@@ -518,7 +542,7 @@ class Service {
     }
 
     if (count) {
-      let countQuery = this._createQuery(params)
+      let countQuery = this._createQuery()
         .select()
         .count('*')
 
@@ -549,8 +573,9 @@ class Service {
       params && typeof params.paginate !== 'undefined'
         ? params.paginate
         : this.paginate
+
     const result = this._find(params, !!paginate.default, query =>
-      filterQuery(query, { paginate, operators: QUERY_OPERATORS })
+      this.filterQuery(query, { paginate, operators: QUERY_OPERATORS })
     )
 
     if (!paginate.default) {
@@ -593,7 +618,7 @@ class Service {
 
     if (beforeHook && beforeHook(data, hookOptions) === false) { throw new errors.BadRequest('Error in before_save lifecycle function') }
 
-    let q = this._createQuery(params, 'create')
+    let q = this._createQuery('create')
 
     if (params.query) {
       if (params.query.$ifNotExists) {
@@ -675,7 +700,7 @@ class Service {
       delete newObject[this.id]
     }
 
-    const q = this._createQuery(params, 'update')
+    const q = this._createQuery('update')
     const idsQuery = this.getIdsQuery(id)
 
     if (params.query && !isNaN(params.query.$ttl)) {
@@ -783,7 +808,7 @@ class Service {
 
     if (beforeHook && beforeHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in before_update lifecycle function') }
 
-    let query = filterQuery(params.query || {}, { operators: QUERY_OPERATORS }).query
+    let query = this.filterQuery(params.query || {}, { operators: QUERY_OPERATORS }).query
     const dataCopy = Object.assign({}, data)
 
     const mapIds = page => Array.isArray(this.id)
@@ -804,7 +829,7 @@ class Service {
       }
     }
 
-    let q = this._createQuery(params, 'update')
+    let q = this._createQuery('update')
 
     if (params.query && !isNaN(params.query.$ttl)) {
       q.usingTTL(Number(params.query.$ttl))
@@ -889,8 +914,8 @@ class Service {
       }
     }
 
-    const { query: queryParams } = filterQuery(params.query || {}, { operators: QUERY_OPERATORS })
-    const query = this._createQuery(params, 'delete')
+    const { query: queryParams } = this.filterQuery(params.query || {}, { operators: QUERY_OPERATORS })
+    const query = this._createQuery('delete')
 
     this.objectify(query, queryParams)
 

@@ -1011,6 +1011,125 @@ describe('Feathers Cassandra service', () => {
     })
   })
 
+  describe('uuid & timeuuid', () => {
+    const uuid1 = types.Uuid.fromString('d9e41929-2e9a-4619-bb06-b07fa7ef1461')
+    const timeuuid1 = types.TimeUuid.fromString('66260eb0-ba6a-11e8-b27a-c6c477aea255')
+
+    const uuid2 = types.Uuid.fromString('d9e41929-2e9a-4619-bb06-b07fa7ef1462')
+    const timeuuid2 = types.TimeUuid.fromString('b48af500-ba6c-11e8-b1b4-1503c0dbeff1')
+
+    beforeEach(async () => {
+      await peopleRooms
+        .create([
+          {
+            people_id: 1,
+            room_id: 1,
+            time: 1,
+            admin: false,
+            uuid: uuid1.toString(),
+            timeuuid: timeuuid1.toString()
+          },
+          {
+            people_id: 2,
+            room_id: 2,
+            time: 2,
+            admin: false,
+            uuid: uuid2,
+            timeuuid: timeuuid2
+          }
+        ])
+    })
+
+    afterEach(async () => {
+      try {
+        await peopleRooms.remove([1, 1, 1])
+      } catch (err) {}
+      try {
+        await peopleRooms.remove([2, 2, 2])
+      } catch (err) {}
+    })
+
+    it('get', () => {
+      return peopleRooms.get([1, 1, 1]).then(data => {
+        expect(data).to.be.ok
+        expect(data.people_id).to.equal(1)
+        expect(data.uuid.toString()).to.equal(uuid1.toString())
+        expect(data.timeuuid.toString()).to.equal(timeuuid1.toString())
+
+        return peopleRooms.get([2, 2, 2]).then(data => {
+          expect(data).to.be.ok
+          expect(data.people_id).to.equal(2)
+          expect(data.uuid.toString()).to.equal(uuid2.toString())
+          expect(data.timeuuid.toString()).to.equal(timeuuid2.toString())
+        })
+      })
+    })
+
+    it('find with string', () => {
+      return peopleRooms.find({
+        query: {
+          uuid: uuid1.toString(),
+          timeuuid: timeuuid1.toString(),
+          $allowFiltering: true
+        }
+      }).then(data => {
+        expect(data).to.be.instanceof(Array)
+        expect(data.length).to.equal(1)
+        expect(data[0].uuid.toString()).to.equal(uuid1.toString())
+        expect(data[0].timeuuid.toString()).to.equal(timeuuid1.toString())
+      })
+    })
+
+    it('find with object', () => {
+      return peopleRooms.find({
+        query: {
+          uuid: types.Uuid.fromString(uuid2.toString()),
+          timeuuid: types.TimeUuid.fromString(timeuuid2.toString()),
+          $allowFiltering: true
+        }
+      }).then(data => {
+        expect(data).to.be.instanceof(Array)
+        expect(data.length).to.equal(1)
+        expect(data[0].uuid.toString()).to.equal(uuid2.toString())
+        expect(data[0].timeuuid.toString()).to.equal(timeuuid2.toString())
+      })
+    })
+
+    it('find with object & uuid in array', () => {
+      return peopleRooms.find({
+        query: {
+          $token: {
+            $keys: ['people_id', 'room_id'],
+            $condition: { $gt: [uuid1, uuid1] }
+          }
+        }
+      }).then(() => {
+        throw new Error('Should never get here')
+      }).catch(function (error) {
+        expect(error).to.be.ok
+        expect(error instanceof errors.BadRequest).to.be.ok
+        expect(error.message).to.equal(`Expected Number, obtained '${uuid1.toString()}'`)
+      })
+    })
+
+    it('find with object & timeuuid in array', () => {
+      return peopleRooms.find({
+        query: {
+          $token: {
+            $keys: ['people_id', 'room_id'],
+            $condition: { $gt: [timeuuid1, timeuuid1] }
+          }
+        }
+      }).then(() => {
+        throw new Error('Should never get here')
+      }).catch(function (error) {
+        expect(error).to.be.ok
+        expect(error instanceof errors.BadRequest).to.be.ok
+        expect(error.message).to.equal(`Expected Number, obtained '${timeuuid1.toString()}'`)
+      })
+    })
+  })
+
   describe('map, list, set', () => {
     beforeEach(async () => {
       await peopleRooms
@@ -1022,9 +1141,7 @@ describe('Feathers Cassandra service', () => {
             admin: false,
             teams: { a: 'b', c: 'd' },
             games: ['a', 'b', 'b'],
-            winners: ['a', 'b', 'b'],
-            uuid: 'd9e41929-2e9a-4619-bb06-b07fa7ef1461',
-            timeuuid: '66260eb0-ba6a-11e8-b27a-c6c477aea255'
+            winners: ['a', 'b', 'b']
           },
           {
             people_id: 2,
@@ -1033,9 +1150,7 @@ describe('Feathers Cassandra service', () => {
             admin: false,
             teams: { x: 'x', y: 'y' },
             games: ['x', 'y', 'y'],
-            winners: ['x', 'y', 'y'],
-            uuid: types.Uuid.fromString('d9e41929-2e9a-4619-bb06-b07fa7ef1462'),
-            timeuuid: types.TimeUuid.fromString('b48af500-ba6c-11e8-b1b4-1503c0dbeff1')
+            winners: ['x', 'y', 'y']
           }
         ])
     })
@@ -1059,13 +1174,10 @@ describe('Feathers Cassandra service', () => {
         expect(data.teams).to.be.deep.equal({ a: 'b', c: 'd' })
         expect(data.games).to.be.deep.equal(['a', 'b', 'b'])
         expect(data.winners).to.be.deep.equal(['a', 'b'])
-        expect(data.uuid.toString()).to.equal('d9e41929-2e9a-4619-bb06-b07fa7ef1461')
-        expect(data.timeuuid.toString()).to.equal('66260eb0-ba6a-11e8-b27a-c6c477aea255')
 
         return peopleRooms.get([2, 2, 2]).then(data => {
           expect(data).to.be.ok
-          expect(data.uuid.toString()).to.equal('d9e41929-2e9a-4619-bb06-b07fa7ef1462')
-          expect(data.timeuuid.toString()).to.equal('b48af500-ba6c-11e8-b1b4-1503c0dbeff1')
+          expect(data.people_id).to.equal(2)
         })
       })
     })

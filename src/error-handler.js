@@ -24,6 +24,10 @@ const ERROR_CODES = {
 module.exports = function errorHandler (error) {
   let feathersError = error
 
+  if (error instanceof TypeError) {
+    throw new errors.BadRequest(error.message)
+  }
+
   // CassanKnex errors
   if (error.code !== undefined && (!error.type || error.type !== 'FeathersError')) {
     switch (error.code) {
