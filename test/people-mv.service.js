@@ -1,5 +1,5 @@
-const createModel = require('./people-mv.model')
 const createService = require('../src')
+const createModel = require('./people-mv.model')
 
 module.exports = function (app) {
   const Model = createModel(app)

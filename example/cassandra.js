@@ -26,9 +26,7 @@ module.exports = function (app) {
   cassandraClient.connect(err => {
     if (err) throw err
 
-    const cassanknex = require('cassanknex')({
-      connection: cassandraClient
-    })
+    const cassanknex = require('cassanknex')({ connection: cassandraClient })
 
     FeathersCassandra.cassanknex(cassanknex)
 

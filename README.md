@@ -252,8 +252,8 @@ app.use('/todos', service({
 
 todos.service.js
 ```js
-const createModel = require('./todos.model')
 const createService = require('feathers-cassandra')
+const createModel = require('./todos.model')
 
 module.exports = function (app) {
   const Model = createModel(app)

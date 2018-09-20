@@ -1,5 +1,5 @@
-const createModel = require('./people-rooms-custom-id-separator.model')
 const createService = require('../src')
+const createModel = require('./people-rooms-custom-id-separator.model')
 
 module.exports = function (app) {
   const Model = createModel(app)
