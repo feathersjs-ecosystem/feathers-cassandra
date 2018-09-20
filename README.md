@@ -117,12 +117,12 @@ config/defaults.json
 
 cassandra.js
 ```js
-const config = require('config')
 const ExpressCassandra = require('express-cassandra')
 const FeathersCassandra = require('feathers-cassandra')
 
 module.exports = function (app) {
-  const models = ExpressCassandra.createClient(config.cassandra)
+  const connectionInfo = app.get('cassandra')
+  const models = ExpressCassandra.createClient(connectionInfo)
   const cassandraClient = models.orm.get_system_client()
 
   app.set('models', models)
@@ -130,9 +130,7 @@ module.exports = function (app) {
   cassandraClient.connect(err => {
     if (err) throw err
 
-    const cassanknex = require('cassanknex')({
-      connection: cassandraClient
-    })
+    const cassanknex = require('cassanknex')({ connection: cassandraClient })
 
     FeathersCassandra.cassanknex(cassanknex)
 
@@ -151,8 +149,8 @@ todos.model.js
 ```js
 module.exports = function (app) {
   const models = app.get('models')
-  const TodoModel = models.loadSchema('Todo', {
-    table_name: 'todos',
+  const Todo = models.loadSchema('Todo', {
+    table_name: 'todo',
     fields: {
       id: 'int',
       text: {
@@ -234,11 +232,11 @@ module.exports = function (app) {
     if (err) throw err
   })
 
-  TodoModel.syncDB(function (err) {
+  Todo.syncDB(function (err) {
     if (err) throw err
   })
 
-  return TodoModel
+  return Todo
 }
 ```
 
@@ -290,9 +288,9 @@ app.use('/user-todos', service({
   idSeparator: ','
 })
 
-app.service('/user-todos').get('1,2');
-app.service('/user-todos').get([1, 2]);
-app.service('/user-todos').get({ userId: 1, todoId: 2 });
+app.service('/user-todos').get('1,2')
+app.service('/user-todos').get([1, 2])
+app.service('/user-todos').get({ userId: 1, todoId: 2 })
 ```  
 
 ## Complete Example
@@ -303,7 +301,7 @@ Here's a complete example of a Feathers server with a `todos` Feathers-Cassandra
 const feathers = require('@feathersjs/feathers')
 const express = require('@feathersjs/express')
 const rest = require('@feathersjs/express/rest')
-const errorHandler = require('@feathersjs/express/errors');
+const errorHandler = require('@feathersjs/express/errors')
 const bodyParser = require('body-parser')
 const ExpressCassandra = require('express-cassandra')
 const FeathersCassandra = require('feathers-cassandra')
@@ -330,9 +328,7 @@ const cassandraClient = models.orm.get_system_client()
 cassandraClient.connect(err => {
   if (err) throw err
 
-  const cassanknex = require('cassanknex')({
-    connection: cassandraClient
-  })
+  const cassanknex = require('cassanknex')({ connection: cassandraClient })
 
   FeathersCassandra.cassanknex(cassanknex)
 
@@ -354,7 +350,7 @@ app.set('models', models)
 
 // Create an Express-Cassandra Model
 const Todo = models.loadSchema('Todo', {
-  table_name: 'todos',
+  table_name: 'todo',
   fields: {
     id: 'int',
     text: {
