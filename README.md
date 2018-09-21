@@ -168,15 +168,15 @@ module.exports = function (app) {
       complete: 'boolean',
       teams: {
         type: 'map',
-        typeDef: '<varchar, text>'
+        typeDef: '<text, text>'
       },
       games: {
         type: 'list',
-        typeDef: '<varchar>'
+        typeDef: '<text>'
       },
       winners: {
         type: 'set',
-        typeDef: '<varchar>'
+        typeDef: '<text>'
       }
     },
     key: ['id'],
@@ -368,15 +368,15 @@ const Todo = models.loadSchema('Todo', {
     complete: 'boolean',
     teams: {
       type: 'map',
-      typeDef: '<varchar, text>'
+      typeDef: '<text, text>'
     },
     games: {
       type: 'list',
-      typeDef: '<varchar>'
+      typeDef: '<text>'
     },
     winners: {
       type: 'set',
-      typeDef: '<varchar>'
+      typeDef: '<text>'
     }
   },
   key: ['id'],

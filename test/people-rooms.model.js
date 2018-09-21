@@ -9,15 +9,15 @@ module.exports = function (app) {
       admin: 'boolean',
       teams: {
         type: 'map',
-        typeDef: '<varchar, text>'
+        typeDef: '<text, text>'
       },
       games: {
         type: 'list',
-        typeDef: '<varchar>'
+        typeDef: '<text>'
       },
       winners: {
         type: 'set',
-        typeDef: '<varchar>'
+        typeDef: '<text>'
       },
       uuid: 'uuid',
       timeuuid: 'timeuuid'

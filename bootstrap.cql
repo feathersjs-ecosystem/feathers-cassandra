@@ -6,7 +6,7 @@ WITH REPLICATION = {
 
 CREATE TABLE test.todos (
   id int,
-  text varchar,
+  text text,
   complete boolean,
   PRIMARY KEY (id)
 );
@@ -15,7 +15,7 @@ CREATE TABLE test.people (
   id int,
   age int,
   created boolean,
-  name varchar,
+  name text,
   time int,
   PRIMARY KEY (id)
 );
@@ -24,7 +24,7 @@ CREATE TABLE test.people_customid (
   customid int,
   age int,
   created boolean,
-  name varchar,
+  name text,
   time int,
   PRIMARY KEY (customid)
 );
@@ -47,7 +47,7 @@ CREATE TABLE test.people_rooms_custom_id_separator (
 
 CREATE TABLE test.people_mv (
   id int,
-  name varchar,
+  name text,
   PRIMARY KEY (id)
 );
 
