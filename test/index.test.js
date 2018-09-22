@@ -521,6 +521,58 @@ describe('Feathers Cassandra service', () => {
     })
   })
 
+  describe('cast string to boolean', () => {
+    beforeEach(async () => {
+      await peopleRooms
+        .create([
+          {
+            people_id: 1,
+            room_id: 1,
+            time: 1,
+            admin: true
+          },
+          {
+            people_id: 2,
+            room_id: 2,
+            time: 2,
+            admin: false
+          }
+        ])
+    })
+
+    afterEach(async () => {
+      await peopleRooms.remove([1, 1, 1])
+      await peopleRooms.remove([2, 2, 2])
+    })
+
+    it('find with \'false\'', () => {
+      return peopleRooms.find({ query: { admin: 'false' } }).then(data => {
+        expect(data).to.be.instanceof(Array)
+        expect(data.length).to.equal(1)
+        expect(data[0].people_id).to.equal(2)
+        expect(data[0].admin).to.equal(false)
+      })
+    })
+
+    it('find with \'0\'', () => {
+      return peopleRooms.find({ query: { admin: '0' } }).then(data => {
+        expect(data).to.be.instanceof(Array)
+        expect(data.length).to.equal(1)
+        expect(data[0].people_id).to.equal(2)
+        expect(data[0].admin).to.equal(false)
+      })
+    })
+
+    it('find with \'\'', () => {
+      return peopleRooms.find({ query: { admin: '' } }).then(data => {
+        expect(data).to.be.instanceof(Array)
+        expect(data.length).to.equal(1)
+        expect(data[0].people_id).to.equal(2)
+        expect(data[0].admin).to.equal(false)
+      })
+    })
+  })
+
   describe('$like method', () => {
     beforeEach(async () => {
       await people
@@ -529,6 +581,10 @@ describe('Feathers Cassandra service', () => {
           name: 'Charlie Brown',
           age: 10
         })
+    })
+
+    afterEach(async () => {
+      await people.remove(1)
     })
 
     it('$like in query', () => {
@@ -694,7 +750,7 @@ describe('Feathers Cassandra service', () => {
       }).catch(function (error) {
         expect(error).to.be.ok
         expect(error.name).to.equal('BadRequest')
-        expect(error.message).to.equal('`forbidden` is a reserved word')
+        expect(error.message).to.equal('Validation failed for field `name` with value `forbidden` (`forbidden` is a reserved word)')
       })
     })
 
@@ -740,7 +796,7 @@ describe('Feathers Cassandra service', () => {
       }).catch(function (error) {
         expect(error).to.be.ok
         expect(error.name).to.equal('BadRequest')
-        expect(error.message).to.equal('`forbidden` is a reserved word')
+        expect(error.message).to.equal('Validation failed for field `name` with value `forbidden` (`forbidden` is a reserved word)')
       })
     })
 
@@ -788,7 +844,7 @@ describe('Feathers Cassandra service', () => {
       }).catch(function (error) {
         expect(error).to.be.ok
         expect(error.name).to.equal('BadRequest')
-        expect(error.message).to.equal('`forbidden` is a reserved word')
+        expect(error.message).to.equal('Validation failed for field `name` with value `forbidden` (`forbidden` is a reserved word)')
       })
     })
 
@@ -836,7 +892,7 @@ describe('Feathers Cassandra service', () => {
       }).catch(function (error) {
         expect(error).to.be.ok
         expect(error.name).to.equal('BadRequest')
-        expect(error.message).to.equal('`forbidden` is a reserved word')
+        expect(error.message).to.equal('Validation failed for field `name` with value `forbidden` (`forbidden` is a reserved word)')
       })
     })
 
@@ -872,7 +928,7 @@ describe('Feathers Cassandra service', () => {
       }).catch(function (error) {
         expect(error).to.be.ok
         expect(error.name).to.equal('BadRequest')
-        expect(error.message).to.equal('`forbidden` is a reserved word')
+        expect(error.message).to.equal('Validation failed for field `name` with value `forbidden` (`forbidden` is a reserved word)')
       })
     })
 

@@ -91,7 +91,8 @@ class Service {
     this.events = options.events || []
     this.materializedViews = options.materializedViews || []
     this.Model = options.model
-    this.modelOptions = this.Model._properties.schema.options || {}
+    this.modelOptions = options.model._properties.schema.options || {}
+    this.fields = options.model._properties.schema.fields
     this.filters = options.model._properties.schema.filters || {}
   }
 
@@ -237,7 +238,9 @@ class Service {
       Object.keys(query).forEach(key => {
         const value = query[key]
 
-        if (value instanceof types.Uuid || Buffer.isBuffer(value)) {
+        if (key[0] !== '$' && this.fields[key] && this.getFieldType(this.fields[key]) === 'boolean' && typeof value === 'string') {
+          query[key] = (value !== '' && value !== '0' && value !== 'false')
+        } else if (value instanceof types.Uuid || Buffer.isBuffer(value)) {
           query[key] = value.toString()
         } else if (Array.isArray(value)) {
           value.forEach((fieldValue, fieldKey) => {
@@ -269,6 +272,14 @@ class Service {
         }
       })
     }
+  }
+
+  getFieldType (field) {
+    return isPlainObject(field) ? field.type : field
+  }
+
+  getFieldRule (field) {
+    return isPlainObject(field) ? field.rule : null
   }
 
   /**
@@ -384,8 +395,7 @@ class Service {
 
   validate (data, type) {
     const model = new this.Model()
-    const modelFields = this.Model._properties.schema.fields
-    const fields = type === 'patch' ? Object.keys(data) : Object.keys(modelFields)
+    const fields = type === 'patch' ? Object.keys(data) : Object.keys(this.fields)
 
     if (type === 'update') {
       if (Array.isArray(this.id)) {
@@ -399,8 +409,8 @@ class Service {
 
     for (const field of fields) {
       let value = data[field]
-      const fieldRule = isPlainObject(modelFields[field]) ? modelFields[field].rule : null
-      const fieldType = isPlainObject(modelFields[field]) ? modelFields[field].type : modelFields[field]
+      const fieldRule = this.getFieldRule(this.fields[field])
+      const fieldType = this.getFieldType(this.fields[field])
 
       if (value === undefined || value === null) {
         if (fieldRule && fieldRule.required) { throw new errors.BadRequest(`\`${field}\` field is required`) }
@@ -435,16 +445,14 @@ class Service {
 
         const validated = model.validate(field, valueToValidate)
 
-        if (validated !== true) { throw new errors.BadRequest(validated()) }
+        if (validated !== true) { throw new errors.BadRequest(`Validation failed for field \`${field}\` with value \`${valueToValidate}\` (${validated()})`) }
       }
     }
   }
 
   prepareUpdateResult (data, oldData, newObject) {
-    const modelFields = this.Model._properties.schema.fields
-
     Object.keys(data).forEach(field => {
-      const fieldType = isPlainObject(modelFields[field]) ? modelFields[field].type : modelFields[field]
+      const fieldType = this.getFieldType(this.fields[field])
       const value = data[field]
       const oldFieldValue = oldData[field]
 
@@ -500,7 +508,7 @@ class Service {
     })
   }
 
-  _find (params, count, getFilter = this.filterQuery) {
+  _find (params, count, getFilter = this.filterQuery.bind(this)) {
     let allowFiltering = false
     let filtersQueue = null
     const { filters, query } = getFilter(params.query || {}, { operators: QUERY_OPERATORS })
@@ -690,8 +698,7 @@ class Service {
   }
 
   _update (id, data, params, oldData) {
-    const modelFields = this.Model._properties.schema.fields
-    const fields = Object.keys(oldData || modelFields)
+    const fields = Object.keys(oldData || this.fields)
     const createdAtField = this.modelOptions.timestamps && this.modelOptions.timestamps.createdAt
     let newObject = {}
 
