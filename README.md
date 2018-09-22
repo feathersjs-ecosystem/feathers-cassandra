@@ -314,6 +314,7 @@ const bodyParser = require('body-parser')
 const ExpressCassandra = require('express-cassandra')
 const FeathersCassandra = require('feathers-cassandra')
 
+// Initialize Express-Cassandra
 const models = ExpressCassandra.createClient({
   clientOptions: {
     contactPoints: ['127.0.0.1'],
@@ -331,13 +332,17 @@ const models = ExpressCassandra.createClient({
   }
 })
 
+// Get Cassandra client
 const cassandraClient = models.orm.get_system_client()
 
+// Connect to Cassandra
 cassandraClient.connect(err => {
   if (err) throw err
 
+  // Initialize CassanKnex with the current Cassandra connection
   const cassanknex = require('cassanknex')({ connection: cassandraClient })
 
+  // Bind CassanKnex
   FeathersCassandra.cassanknex(cassanknex)
 
   cassanknex.on('ready', err => {
@@ -452,14 +457,18 @@ app.use('/todos', FeathersCassandra({
   }
 }))
 
+// Handle Errors
 app.use(errorHandler())
 
+// Start the server
 module.exports = app.listen(3030)
 
 console.log('Feathers Todo FeathersCassandra service running on 127.0.0.1:3030')
 ```
 
-You can run this example by using `node server` and going to [localhost:3030/todos](http://localhost:3030/todos). You should see an empty array. That's because you don't have any Todos yet but you now have full CRUD for your new todos service!
+Run the example with `node app` and go to [localhost:3030/todos](http://localhost:3030/todos).
+
+You should see an empty array. That's because you don't have any Todos yet, but you now have full CRUD for your new todos service!
 
 ## License
 
