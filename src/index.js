@@ -256,6 +256,21 @@ class Service {
     return filterQueryCommon(query, options)
   }
 
+  prepareIfCondition (id, query) {
+    if (id !== null && !query.$if) {
+      query.$if = {}
+
+      Object.keys(query).forEach(key => {
+        const idField = Array.isArray(this.id) ? this.id.includes(key) : key === this.id
+
+        if (!idField && key[0] !== '$') {
+          query.$if[key] = query[key]
+          delete query[key]
+        }
+      })
+    }
+  }
+
   /**
    * Maps a feathers query to the CassanKnex schema builder functions.
    * @param query - a query object. i.e. { type: 'fish', age: { $lte: 5 }
@@ -721,6 +736,12 @@ class Service {
       q.where(key, '=', idsQuery[key])
     })
 
+    if (!oldData) {
+      const query = this.filterQuery(params.query || {}, { operators: QUERY_OPERATORS }).query
+      this.prepareIfCondition(id, query)
+      this.objectify(q, query)
+    }
+
     return this.exec(q)
       .then(() => {
         // Restore the createdAt field so we can return it to the client
@@ -774,6 +795,7 @@ class Service {
 
     if (params.query && params.query.$noSelect) {
       delete params.query.$noSelect
+
       return this._update(id, data, params)
         .then(data => {
           if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function') }
@@ -831,16 +853,19 @@ class Service {
 
     let q = this._createQuery('update')
 
-    if (params.query && !isNaN(params.query.$ttl)) {
-      q.usingTTL(Number(params.query.$ttl))
-      delete params.query.$ttl
+    if (params.query) {
+      if (!isNaN(params.query.$ttl)) {
+        q.usingTTL(Number(params.query.$ttl))
+        delete params.query.$ttl
+      }
+
+      if (params.query.$timestamp) {
+        q.usingTimestamp(params.query.$timestamp)
+        delete params.query.$timestamp
+      }
     }
 
-    if (params.query && params.query.$timestamp) {
-      q.usingTimestamp(params.query.$timestamp)
-      delete params.query.$timestamp
-    }
-
+    this.prepareIfCondition(id, query)
     this.objectify(q, query)
 
     if (Array.isArray(this.id)) {
@@ -917,6 +942,7 @@ class Service {
     const { query: queryParams } = this.filterQuery(params.query || {}, { operators: QUERY_OPERATORS })
     const query = this._createQuery('delete')
 
+    this.prepareIfCondition(id, queryParams)
     this.objectify(query, queryParams)
 
     if (params.query && params.query.$noSelect) {

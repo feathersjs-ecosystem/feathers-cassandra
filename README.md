@@ -47,7 +47,8 @@ the benefits of the Express-Cassandra ORM.
 * **$token** *TOKEN* - Token query on primary keys. can be used for pagination - Single key: `$token: { id: { $gt: 1 } }` Multiple keys: `$token: { $keys: ['id', 'time'], $condition: { $gt: [1, 2] } }`  
 * **$contains** *CONTAINS* - Search in indexed list, set or map `colors: { $contains: 'blue' }`
 * **$containsKey** *CONTAINS KEY* - Search in indexed map `colors: { $containsKey: 'dark' }`
-* **$if** *IF* - Condition that must return TRUE for the update to succeed `$if: { name: 'John' }`
+* **$if** *IF* - Condition that must return TRUE for the update to succeed `$if: { name: 'John' }`  
+  Will be used automatically when an update, patch or remove request query by id with additional query conditions 
 * **$ifExists** *IF EXISTS* - Make the UPDATE fail when rows don't match the WHERE conditions `$ifExists: true`
 * **$ifNotExists** *IF NOT EXISTS* - Inserts a new row of data if no rows match the PRIMARY KEY values `$ifNotExists: true`
 * **$allowFiltering** *ALLOW FILTERING* - Provides the capability to query the clustering columns using any condition `$allowFiltering: true`
