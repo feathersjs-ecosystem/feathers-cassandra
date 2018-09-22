@@ -36,11 +36,11 @@ the benefits of the Express-Cassandra ORM.
 |:---: | :---: | --- | --- |
 | `$ne` | `!=` | Applicable for IF conditions only | `id: { $ne: 1 }` |
 | `$isnt` | `IS NOT` | Applicable for materialized view filters only | `id: { $isnt: 1 }` |
-| `$gt` | `>` |  | `id: { $ne: 1 }` |
-| `$lt` | `<` |  | `id: { $lt: 1 }` |
-| `$gte` | `>=` |  | `id: { $gte: 1 }` |
-| `$lte` | `<=` |  | `id: { $lte: 1 }` |
-| `$in` | `IN` |  | `id: { $in: [1, 2] }` |
+| `$gt` | `>` | Greater than | `id: { $ne: 1 }` |
+| `$lt` | `<` | Lower than | `id: { $lt: 1 }` |
+| `$gte` | `>=` | Greater than or equal | `id: { $gte: 1 }` |
+| `$lte` | `<=` | Lower than or equal | `id: { $lte: 1 }` |
+| `$in` | `IN` | Equal to item in list | `id: { $in: [1, 2] }` |
 | `$like` | `LIKE` | Applicable for SASI indexes only | `text: { $like: '%abc%' }` |
 | `$sort` | `ORDER BY` | Sort results | ASC: `$sort: { id: 1 }` DESC: `$sort: { id: -1 }` |
 | `$limit` | `LIMIT` | Sets the maximum number of rows that the query returns | `$limit: 2` |
@@ -65,8 +65,8 @@ the benefits of the Express-Cassandra ORM.
 
 | Operator | Native Operator | Description | Example |
 |:---: | :---: | --- | --- |
-| `$noSelect` | - | Skips SELECT queries in create, update, patch & remove requests. Response data will be based on the input data | `$noSelect: true` |
-| `$filters` | - | Sets Model's CassanKnex filters to run on a get or find request | `$filters: ['completed', 'recent']` |
+| `$noSelect` |  | Skips SELECT queries in create, update, patch & remove requests. Response data will be based on the input data | `$noSelect: true` |
+| `$filters` |  | Sets Model's CassanKnex filters to run on a get or find request | `$filters: ['completed', 'recent']` |
 
 ##### Cassandra Data Operators
 
