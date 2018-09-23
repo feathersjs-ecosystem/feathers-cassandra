@@ -1532,29 +1532,17 @@ describe('Feathers Cassandra service', () => {
       } catch (err) {}
     })
 
-    it('get', () => {
-      return people.get(7, {
-        query: {
-          $select: ['ttl(name)', 'writetime(name)']
-        }
-      }).then(data => {
-        expect(data).to.be.ok
-        expect(data.name_ttl).to.be.ok
-        expect(data.name_writetime.toString()).to.equal(timestamp.toString())
-      })
-    })
-
     it('find', () => {
       return people.find({
         query: {
           id: 7,
-          $select: ['TTL(name)', 'WRITETIME(name)']
+          $select: ['ttl(name)', 'writetime(name)']
         }
       }).then(data => {
         expect(data).to.be.instanceof(Array)
         expect(data.length).to.equal(1)
-        expect(data[0].name_ttl).to.be.ok
-        expect(data[0].name_writetime.toString()).to.equal(timestamp.toString())
+        expect(data[0]['ttl(name)']).to.be.ok
+        expect(data[0]['writetime(name)'].toString()).to.equal(timestamp.toString())
       })
     })
   })
@@ -1740,7 +1728,7 @@ describe('Feathers Cassandra service', () => {
           }
         }).then(data => {
           expect(data).to.be.ok
-          expect(data.name_writetime.toString()).to.equal(timestamp.toString())
+          expect(data['writetime(name)'].toString()).to.equal(timestamp.toString())
         })
       })
     })
@@ -1762,7 +1750,7 @@ describe('Feathers Cassandra service', () => {
           }
         }).then(data => {
           expect(data).to.be.ok
-          expect(data.name_writetime.toString()).to.equal(timestamp.toString())
+          expect(data['writetime(name)'].toString()).to.equal(timestamp.toString())
         })
       })
     })
@@ -1784,7 +1772,7 @@ describe('Feathers Cassandra service', () => {
           }
         }).then(data => {
           expect(data).to.be.ok
-          expect(data.name_writetime.toString()).to.equal(timestamp)
+          expect(data['writetime(name)'].toString()).to.equal(timestamp)
         })
       })
     })
@@ -1847,7 +1835,7 @@ describe('Feathers Cassandra service', () => {
           }
         }).then(data => {
           expect(data).to.be.ok
-          expect(data.name_writetime.toString()).to.equal(timestamp.toString())
+          expect(data['writetime(name)'].toString()).to.equal(timestamp.toString())
 
           return sleep(5000).then(() => {
             return people.get(6).then(() => {

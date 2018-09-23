@@ -11,6 +11,8 @@ const METHODS = {
   $or: 'orWhere', // not supported
   $and: 'andWhere',
   $token: 'tokenWhere',
+  $minTimeuuid: 'minTimeuuidWhere',
+  $maxTimeuuid: 'maxTimeuuidWhere',
   $if: 'if',
   $ifExists: 'ifExists',
   $ifNotExists: 'ifNotExists',
@@ -42,8 +44,10 @@ const QUERY_OPERATORS = [
   '$ifExists',
   '$ifNotExists',
   '$allowFiltering',
-  '$filters',
-  '$limitPerPartition'
+  '$limitPerPartition',
+  '$minTimeuuid',
+  '$maxTimeuuid',
+  '$filters'
 ]
 
 const OPERATORS_MAP = {
@@ -307,7 +311,7 @@ class Service {
       }
 
       const column = parentKey && parentKey[0] !== '$' ? parentKey : key
-      const method = METHODS[methodKey || parentKey || key]
+      const method = METHODS[methodKey] || METHODS[parentKey] || METHODS[key]
       const operator = OPERATORS_MAP[key] || '='
 
       if (method) {
@@ -361,16 +365,12 @@ class Service {
       const fieldsToRemove = []
 
       for (const field of filters.$select) {
-        const ttlMatch = field.match(/ttl\((.+)\)/i)
-        const writetimeMatch = field.match(/writetime\((.+)\)/i)
+        const match = field.match(/(ttl|writetime|dateOf|unixTimestampOf|toDate|toTimestamp|toUnixTimestamp)\((.+)\)/)
+        if (match) {
+          const fieldMethod = match[1]
+          const fieldName = match[2]
 
-        if (ttlMatch) {
-          const fieldName = ttlMatch[1]
-          q.ttl({ [fieldName]: fieldName + '_ttl' })
-          fieldsToRemove.push(field)
-        } else if (writetimeMatch) {
-          const fieldName = writetimeMatch[1]
-          q.writetime({ [fieldName]: fieldName + '_writetime' })
+          q[fieldMethod]({ [fieldName]: `${fieldMethod}(${fieldName})` })
           fieldsToRemove.push(field)
         }
       }

@@ -29,7 +29,8 @@ module.exports = function (app) {
         type: 'set',
         typeDef: '<text>'
       },
-      uuid: 'uuid'
+      uuid: 'uuid',
+      timeuuid: 'timeuuid'
     },
     key: ['id'],
     custom_indexes: [
