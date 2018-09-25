@@ -1568,10 +1568,10 @@ describe('Feathers Cassandra service', () => {
         }
       }).then(data => {
         expect(data).to.be.ok
-        expect(data['dateOf(timeuuid)'].toString()).to.equal('Mon Sep 17 2018 14:11:17 GMT+0300 (IDT)')
+        expect(data['dateOf(timeuuid)'].toString()).to.include('Mon Sep 17 2018 14:11:17 GMT+')
         expect(data['unixTimestampOf(timeuuid)'].toString()).to.equal('1537182677787')
         expect(data['toDate(timeuuid)'].toString()).to.equal('2018-09-17')
-        expect(data['toTimestamp(timeuuid)'].toString()).to.equal('Mon Sep 17 2018 14:11:17 GMT+0300 (IDT)')
+        expect(data['toTimestamp(timeuuid)'].toString()).to.include('Mon Sep 17 2018 14:11:17 GMT+')
         expect(data['toUnixTimestamp(timeuuid)'].toString()).to.equal('1537182677787')
       })
     })
