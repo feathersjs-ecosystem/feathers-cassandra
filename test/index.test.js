@@ -1509,10 +1509,13 @@ describe('Feathers Cassandra service', () => {
     })
   })
 
-  describe('select TTL & WRITETIME', () => {
+  describe('special selectors', () => {
     const timestamp = Date.now() * 1000
+    let timeuuid = null
 
     before(async () => {
+      timeuuid = models.timeuuidFromString('66260eb0-ba6a-11e8-b27a-c6c477aea255')
+
       await people
         .create({
           id: 7,
@@ -1524,15 +1527,27 @@ describe('Feathers Cassandra service', () => {
             $timestamp: timestamp
           }
         })
+
+      await peopleRooms
+        .create({
+          people_id: 1,
+          room_id: 1,
+          time: 1,
+          admin: false,
+          timeuuid
+        })
     })
 
     after(async () => {
       try {
         await people.remove(7)
       } catch (err) {}
+      try {
+        await peopleRooms.remove([1, 1, 1])
+      } catch (err) {}
     })
 
-    it('find', () => {
+    it('find with ttl & writetime', () => {
       return people.find({
         query: {
           id: 7,
@@ -1543,6 +1558,81 @@ describe('Feathers Cassandra service', () => {
         expect(data.length).to.equal(1)
         expect(data[0]['ttl(name)']).to.be.ok
         expect(data[0]['writetime(name)'].toString()).to.equal(timestamp.toString())
+      })
+    })
+
+    it('get timeuuid with time functions', () => {
+      return peopleRooms.get([1, 1, 1], {
+        query: {
+          $select: ['dateOf(timeuuid)', 'unixTimestampOf(timeuuid)', 'toDate(timeuuid)', 'toTimestamp(timeuuid)', 'toUnixTimestamp(timeuuid)']
+        }
+      }).then(data => {
+        expect(data).to.be.ok
+        expect(data['dateOf(timeuuid)'].toString()).to.equal('Mon Sep 17 2018 14:11:17 GMT+0300 (IDT)')
+        expect(data['unixTimestampOf(timeuuid)'].toString()).to.equal('1537182677787')
+        expect(data['toDate(timeuuid)'].toString()).to.equal('2018-09-17')
+        expect(data['toTimestamp(timeuuid)'].toString()).to.equal('Mon Sep 17 2018 14:11:17 GMT+0300 (IDT)')
+        expect(data['toUnixTimestamp(timeuuid)'].toString()).to.equal('1537182677787')
+      })
+    })
+  })
+
+  describe('minTimeuuid & maxTimeuuid', () => {
+    let timeuuid1 = null
+    let timeuuid2 = null
+
+    before(async () => {
+      timeuuid1 = models.timeuuidFromString('66260eb0-ba6a-11e8-b27a-c6c477aea255')
+      timeuuid2 = models.timeuuidFromString('b48af500-ba6c-11e8-b1b4-1503c0dbeff1')
+
+      await peopleRooms
+        .create({
+          people_id: 1,
+          room_id: 1,
+          time: 1,
+          admin: false,
+          timeuuid: timeuuid1
+        })
+
+      await peopleRooms
+        .create({
+          people_id: 2,
+          room_id: 2,
+          time: 2,
+          admin: false,
+          timeuuid: timeuuid2
+        })
+    })
+
+    after(async () => {
+      try {
+        await peopleRooms.remove([1, 1, 1])
+      } catch (err) {}
+      try {
+        await peopleRooms.remove([2, 2, 2])
+      } catch (err) {}
+    })
+
+    it('find with minTimeuuid and maxTimeuuid', () => {
+      return peopleRooms.find({
+        query: {
+          $minTimeuuid: {
+            timeuuid: {
+              $gt: new Date(timeuuid1.getDate().getTime() + 1000).toISOString()
+            }
+          },
+          $maxTimeuuid: {
+            timeuuid: {
+              $lt: new Date(timeuuid2.getDate().getTime() + 1000).toISOString()
+            }
+          },
+          $allowFiltering: true
+        }
+      }).then(data => {
+        expect(data).to.be.instanceof(Array)
+        expect(data.length).to.equal(1)
+        expect(data[0].people_id).to.equal(2)
+        expect(data[0].timeuuid.toString()).to.equal(timeuuid2.toString())
       })
     })
   })
@@ -1561,6 +1651,8 @@ describe('Feathers Cassandra service', () => {
     after(async () => {
       try {
         await peopleRooms.remove([1, 1, 1])
+      } catch (err) {}
+      try {
         await peopleMv.remove(1)
       } catch (err) {}
     })

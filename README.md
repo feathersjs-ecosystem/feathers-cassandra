@@ -44,7 +44,7 @@ the benefits of the Express-Cassandra ORM.
 | `$like` | `LIKE` | Applicable for SASI indexes only | `text: { $like: '%abc%' }` |
 | `$sort` | `ORDER BY` | Sort results | ASC: `$sort: { id: 1 }` DESC: `$sort: { id: -1 }` |
 | `$limit` | `LIMIT` | Sets the maximum number of rows that the query returns | `$limit: 2` |
-| `$select` | `SELECT` | Sets fields to return. supports reading WRITETIME & TTL of a field | `$select: ['id', 'name', 'writetime(name)', 'ttl(name)']` |
+| `$select` | `SELECT` | Sets fields to return. you can also select a field with applied Cassandra function: `writetime`, `ttl`, `dateOf`, `unixTimestampOf`, `toDate`, `toTimestamp` & `toUnixTimestamp` | `$select: ['id', 'name', 'writetime(name)', 'dateOf(name)']` |
 
 ##### Cassandra Query Operators
 

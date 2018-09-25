@@ -365,7 +365,7 @@ class Service {
       const fieldsToRemove = []
 
       for (const field of filters.$select) {
-        const match = field.match(/(ttl|writetime|dateOf|unixTimestampOf|toDate|toTimestamp|toUnixTimestamp)\((.+)\)/)
+        const match = field && field.match(/(ttl|writetime|dateOf|unixTimestampOf|toDate|toTimestamp|toUnixTimestamp)\((.+)\)/)
         if (match) {
           const fieldMethod = match[1]
           const fieldName = match[2]
