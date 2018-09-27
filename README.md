@@ -51,6 +51,8 @@ the benefits of the Express-Cassandra ORM.
 | Operator | Native Operator | Description | Example |
 |:---: | :---: | --- | --- |
 | `$token` | `TOKEN` | Token query on primary keys. can be used for pagination | Single key: `$token: { id: { $gt: 1 } }` Multiple keys: `$token: { $keys: ['id', 'time'], $condition: { $gt: [1, 2] } }`  |
+| `$minTimeuuid` | `minTimeuuid` | Query on `timeuuid` column given a time component. [read more](http://cassandra.apache.org/doc/4.0/cql/functions.html#mintimeuuid-and-maxtimeuuid) | `$minTimeuuid: { timeuuid: { $lt: '2013-02-02 10:00+0000' } }` |
+| `$maxTimeuuid` | `maxTimeuuid` | Query on `timeuuid` column given a time component. [read more](http://cassandra.apache.org/doc/4.0/cql/functions.html#mintimeuuid-and-maxtimeuuid) | `$maxTimeuuid: { timeuuid: { $gt: '2013-01-01 00:05+0000' } }` |
 | `$contains` | `CONTAINS` | Search in indexed list, set or map | `colors: { $contains: 'blue' }` |
 | `$containsKey` | `CONTAINS KEY` | Search in indexed map | `colors: { $containsKey: 'dark' }` |
 | `$if` | `IF` | Condition that must return TRUE for the update to succeed. Will be used automatically when an update, patch or remove request query by id with additional query conditions | `$if: { name: 'John' }` |
