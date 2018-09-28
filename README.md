@@ -16,6 +16,10 @@ npm install --save express-cassandra
 npm install --save cassanknex
 ```
 
+### [Feathers CLI](https://github.com/feathersjs/feathers/tree/master/packages/cli)
+
+Use `feathers generate service` command to generate a new `Cassandra` service.
+
 ## Documentation
 
 Please refer to the [Feathers database adapter documentation](https://docs.feathersjs.com/api/databases/adapters.html) for more details or directly at:
