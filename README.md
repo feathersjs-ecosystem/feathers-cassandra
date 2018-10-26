@@ -63,7 +63,7 @@ the benefits of the Express-Cassandra ORM.
 | `$ifExists` | `IF EXISTS` | Make the UPDATE fail when rows don't match the WHERE conditions | `$ifExists: true` |
 | `$ifNotExists` | `IF NOT EXISTS` | Inserts a new row of data if no rows match the PRIMARY KEY values | `$ifNotExists: true` |
 | `$allowFiltering` | `ALLOW FILTERING` | Provides the capability to query the clustering columns using any condition | `$allowFiltering: true` |
-| `$limitPerPartition` | `PER PARTITION LIMIT` | Sets the maximum number of rows that the query returns from each partition | `$limitPerPartition: true` |
+| `$limitPerPartition` | `PER PARTITION LIMIT` | Sets the maximum number of rows that the query returns from each partition | `$limitPerPartition: 1` |
 | `$ttl` | `USING TTL` | Sets a time in seconds for data in a column to expire. use in create, update & patch requests | `$ttl: 60` |
 | `$timestamp` | `USING TIMESTAMP` | Sets a timestamp for data in a column to expire. use in create, update & patch requests | `$timestamp: 1537017312928000` |
 
