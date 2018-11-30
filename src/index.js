@@ -445,7 +445,7 @@ class Service {
 
         const validated = model.validate(field, valueToValidate)
 
-        if (validated !== true) { throw new errors.BadRequest(`Validation failed for field \`${field}\` with value \`${valueToValidate}\` (${validated()})`) }
+        if (validated !== true) { throw new errors.BadRequest(validated(valueToValidate, field, fieldType)) }
       }
     }
   }

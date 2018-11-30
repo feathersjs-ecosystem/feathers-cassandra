@@ -750,7 +750,7 @@ describe('Feathers Cassandra service', () => {
       }).catch(function (error) {
         expect(error).to.be.ok
         expect(error.name).to.equal('BadRequest')
-        expect(error.message).to.equal('Validation failed for field `name` with value `forbidden` (`forbidden` is a reserved word)')
+        expect(error.message).to.equal('`forbidden` is a reserved word')
       })
     })
 
@@ -796,7 +796,7 @@ describe('Feathers Cassandra service', () => {
       }).catch(function (error) {
         expect(error).to.be.ok
         expect(error.name).to.equal('BadRequest')
-        expect(error.message).to.equal('Validation failed for field `name` with value `forbidden` (`forbidden` is a reserved word)')
+        expect(error.message).to.equal('`forbidden` is a reserved word')
       })
     })
 
@@ -844,7 +844,7 @@ describe('Feathers Cassandra service', () => {
       }).catch(function (error) {
         expect(error).to.be.ok
         expect(error.name).to.equal('BadRequest')
-        expect(error.message).to.equal('Validation failed for field `name` with value `forbidden` (`forbidden` is a reserved word)')
+        expect(error.message).to.equal('`forbidden` is a reserved word')
       })
     })
 
@@ -892,7 +892,7 @@ describe('Feathers Cassandra service', () => {
       }).catch(function (error) {
         expect(error).to.be.ok
         expect(error.name).to.equal('BadRequest')
-        expect(error.message).to.equal('Validation failed for field `name` with value `forbidden` (`forbidden` is a reserved word)')
+        expect(error.message).to.equal('`forbidden` is a reserved word')
       })
     })
 
@@ -928,7 +928,7 @@ describe('Feathers Cassandra service', () => {
       }).catch(function (error) {
         expect(error).to.be.ok
         expect(error.name).to.equal('BadRequest')
-        expect(error.message).to.equal('Validation failed for field `name` with value `forbidden` (`forbidden` is a reserved word)')
+        expect(error.message).to.equal('`forbidden` is a reserved word')
       })
     })
 
@@ -1568,10 +1568,10 @@ describe('Feathers Cassandra service', () => {
         }
       }).then(data => {
         expect(data).to.be.ok
-        expect(data['dateOf(timeuuid)'].toString()).to.include('Mon Sep 17 2018 11:11:17 GMT+')
+        expect(data['dateOf(timeuuid)'].toISOString()).to.equal('2018-09-17T11:11:17.787Z')
         expect(data['unixTimestampOf(timeuuid)'].toString()).to.equal('1537182677787')
         expect(data['toDate(timeuuid)'].toString()).to.equal('2018-09-17')
-        expect(data['toTimestamp(timeuuid)'].toString()).to.include('Mon Sep 17 2018 11:11:17 GMT+')
+        expect(data['toTimestamp(timeuuid)'].toISOString()).to.equal('2018-09-17T11:11:17.787Z')
         expect(data['toUnixTimestamp(timeuuid)'].toString()).to.equal('1537182677787')
       })
     })

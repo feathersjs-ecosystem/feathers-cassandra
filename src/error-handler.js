@@ -25,7 +25,7 @@ module.exports = function errorHandler (error) {
   let feathersError = error
 
   if (error instanceof TypeError) {
-    throw new errors.BadRequest(error.message)
+    throw new errors.BadRequest(error)
   }
 
   // CassanKnex errors
@@ -34,52 +34,52 @@ module.exports = function errorHandler (error) {
       case ERROR_CODES.syntaxError:
       case ERROR_CODES.invalid:
       case ERROR_CODES.truncateError:
-        feathersError = new errors.BadRequest(error.message)
+        feathersError = new errors.BadRequest(error)
         break
 
       case ERROR_CODES.badCredentials:
-        feathersError = new errors.NotAuthenticated(error.message)
+        feathersError = new errors.NotAuthenticated(error)
         break
 
       case ERROR_CODES.unauthorized:
-        feathersError = new errors.Forbidden(error.message)
+        feathersError = new errors.Forbidden(error)
         break
 
       case ERROR_CODES.functionFailure:
-        feathersError = new errors.MethodNotAllowed(error.message)
+        feathersError = new errors.MethodNotAllowed(error)
         break
 
       case ERROR_CODES.protocolError:
-        feathersError = new errors.NotAcceptable(error.message)
+        feathersError = new errors.NotAcceptable(error)
         break
 
       case ERROR_CODES.readTimeout:
       case ERROR_CODES.writeTimeout:
-        feathersError = new errors.Timeout(error.message)
+        feathersError = new errors.Timeout(error)
         break
 
       case ERROR_CODES.alreadyExists:
-        feathersError = new errors.Conflict(error.message)
+        feathersError = new errors.Conflict(error)
         break
 
       case ERROR_CODES.overloaded:
-        feathersError = new errors.Unprocessable(error.message)
+        feathersError = new errors.Unprocessable(error)
         break
 
       case ERROR_CODES.configError:
       case ERROR_CODES.serverError:
       case ERROR_CODES.readFailure:
       case ERROR_CODES.writeFailure:
-        feathersError = new errors.GeneralError(error.message)
+        feathersError = new errors.GeneralError(error)
         break
 
       case ERROR_CODES.unprepared:
-        feathersError = new errors.NotImplemented(error.message)
+        feathersError = new errors.NotImplemented(error)
         break
 
       case ERROR_CODES.isBootstrapping:
       case ERROR_CODES.unavailableException:
-        feathersError = new errors.Unavailable(error.message)
+        feathersError = new errors.Unavailable(error)
         break
 
       default:
