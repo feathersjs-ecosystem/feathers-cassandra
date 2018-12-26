@@ -83,6 +83,10 @@ the benefits of the Express-Cassandra ORM.
 | `$increment` | `+` | Increments a counter | `days: { $increments: 2 }` |
 | `$decrement` | `-` | Decrements a counter | `days: { $decrements: 2 }` |
 
+### Passing Cassandra [queryOptions](https://docs.datastax.com/en/developer/nodejs-driver/3.3/api/type.QueryOptions/)
+
+Set `params.queryOptions` to override options per query, like [setting a different consistency level for a single query](http://datastax.github.io/nodejs-driver/getting-started/#setting-the-consistency-level).  
+
 ### Materialized Views
 
 A materialized view will be automatically queried against when a query contains only that view's keys. 

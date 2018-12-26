@@ -499,12 +499,18 @@ class Service {
     })
   }
 
-  exec (query) {
+  exec (query, params) {
     return new Promise((resolve, reject) => {
-      query.exec((err, res) => {
+      const callback = (err, res) => {
         if (err) return reject(err)
         resolve(res)
-      })
+      }
+
+      if (params && params.queryOptions) {
+        query.exec(params.queryOptions, callback)
+      } else {
+        query.exec(callback)
+      }
     })
   }
 
@@ -542,7 +548,7 @@ class Service {
     let executeQuery = res => {
       const total = res ? Number(res.rows[0].count) : undefined
 
-      return this.exec(q)
+      return this.exec(q, params)
         .then(res => {
           return {
             total,
@@ -577,7 +583,7 @@ class Service {
 
       this.objectify(countQuery, query)
 
-      return this.exec(countQuery)
+      return this.exec(countQuery, params)
         .then(res => {
           return executeQuery(res)
         })
@@ -660,8 +666,7 @@ class Service {
       }
     }
 
-    return this.exec(q
-      .insert(data))
+    return this.exec(q.insert(data), params)
       .then(row => {
         if (afterHook && afterHook(data, hookOptions) === false) { throw new errors.BadRequest('Error in after_save lifecycle function') }
 
@@ -749,7 +754,7 @@ class Service {
       this.objectify(q, query)
     }
 
-    return this.exec(q)
+    return this.exec(q, params)
       .then(() => {
         // Restore the createdAt field so we can return it to the client
         if (createdAtField && !newObject[createdAtField] && oldData) { newObject[createdAtField] = oldData[createdAtField] }
@@ -899,7 +904,7 @@ class Service {
 
         q.set(dataCopy)
 
-        return this.exec(q)
+        return this.exec(q, params)
           .then(() => {
             if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function') }
 
@@ -953,7 +958,7 @@ class Service {
     this.objectify(query, queryParams)
 
     if (params.query && params.query.$noSelect) {
-      return this.exec(query)
+      return this.exec(query, params)
         .then(() => {
           if (afterHook && afterHook(params.query, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_delete lifecycle function') }
           return {}
@@ -964,7 +969,7 @@ class Service {
         .then(page => {
           const items = page.data
 
-          return this.exec(query)
+          return this.exec(query, params)
             .then(() => {
               if (afterHook && afterHook(params.query, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_delete lifecycle function') }
 
