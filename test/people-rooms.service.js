@@ -6,6 +6,8 @@ module.exports = function (app) {
 
   const options = {
     model: Model,
+    multi: ['create', 'patch'],
+    whitelist: ['$token', '$keys', '$condition', '$allowFiltering', '$limitPerPartition', '$contains', '$containsKey', '$minTimeuuid', '$maxTimeuuid', '$if'],
     events: ['testing']
   }
 

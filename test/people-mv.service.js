@@ -6,6 +6,7 @@ module.exports = function (app) {
 
   const options = {
     model: Model,
+    multi: ['create'],
     materializedViews: [
       {
         keys: ['name'],

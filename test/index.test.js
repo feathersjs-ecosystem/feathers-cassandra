@@ -53,14 +53,6 @@ describe('Feathers Cassandra service', () => {
   })
 
   describe('Initialization', () => {
-    describe('when missing options', () => {
-      it('throws an error', () => {
-        expect(service.bind(null)).to.throw(
-          'FeathersCassandra options have to be provided'
-        )
-      })
-    })
-
     describe('when missing a model', () => {
       it('throws an error', () => {
         expect(service.bind(null, {})).to.throw(
@@ -94,7 +86,7 @@ describe('Feathers Cassandra service', () => {
 
     describe('when missing the paginate option', () => {
       it('sets the default to be {}', () => {
-        expect(people.paginate).to.deep.equal({})
+        expect(people.paginate).to.equal(undefined)
       })
     })
 
@@ -380,7 +372,7 @@ describe('Feathers Cassandra service', () => {
       }).catch(function (error) {
         expect(error).to.be.ok
         expect(error instanceof errors.BadRequest).to.be.ok
-        expect(error.message).to.equal('Not replacing multiple records. Did you mean `patch`?')
+        expect(error.message).to.equal(`You can not replace multiple instances. Did you mean 'patch'?`)
       })
     })
 
@@ -945,7 +937,7 @@ describe('Feathers Cassandra service', () => {
 
   describe('filters', () => {
     beforeEach(async () => {
-      people.paginate = { default: 10, max: 20 }
+      people.options.paginate = { default: 10, max: 20 }
 
       await people
         .create([
@@ -968,7 +960,7 @@ describe('Feathers Cassandra service', () => {
     })
 
     afterEach(async () => {
-      people.paginate = {}
+      people.options.paginate = undefined
 
       try {
         await people.remove(1)

@@ -32,6 +32,36 @@ Refer to the official [Express-Cassanndra documention](https://express-cassandra
 It works like the [Knex service](https://github.com/feathersjs/feathers-knex) adapter by using [CassanKnex](https://github.com/azuqua/cassanknex), except it has all
 the benefits of the Express-Cassandra ORM.
 
+### Service Options
+
+- `model` (**required**) - The Express-Cassandra model definition
+- `id` (*optional*, default: `'id'`) - The name of the id field property. Use array of strings for composite primary keys
+- `events` (*optional*) - A list of [custom service events](https://docs.feathersjs.com/api/events.html#custom-events) sent by this service
+- `paginate` (*optional*) - A [pagination object](https://docs.feathersjs.com/api/databases/common.html#pagination) containing a `default` and `max` page size
+- `multi` (*optional*) - Allow `create` with arrays and `update` and `remove` with `id` `null` to change multiple items. Can be `true` for all methods or an array of allowed methods (e.g. `[ 'remove', 'create' ]`)
+- `whitelist` (*optional*) - A list of additional query operators to allow (e.g. `[ '$token', '$allowFiltering' ]`)
+
+### Default Query Operators
+ 
+Starting at version 2.0.0 `feathers-cassandra` converts queries securely. If you want to support additional Cassandra operators, the `whitelist` service option can contain an array of additional allowed operators. By default, supported operators are:
+ 
+```
+'$eq',
+'$ne',
+'$gte',
+'$gt',
+'$lte',
+'$lt',
+'$in',
+'$nin',
+'$like',
+'$notLike',
+'$iLike',
+'$notILike',
+'$or',
+'$and'
+```
+
 ### Supported Operators
 
 ##### Query Operators
@@ -279,7 +309,8 @@ module.exports = function (app) {
     paginate: {
       default: 2,
       max: 4
-    }
+    },
+    whitelist: ['$allowFiltering', '$filters', '$ttl', '$if']
   }
 
   app.use('/todos', createService(options))
@@ -480,8 +511,20 @@ Run the example with `node app` and go to [localhost:3030/todos](http://localhos
 
 You should see an empty array. That's because you don't have any Todos yet, but you now have full CRUD for your new todos service!
 
+## Migrating
+ 
+`feathers-cassandra` 2.0.0 comes with important security and usability updates.
+
+> __Important:__ For general migration information to the new database adapter functionality see [crow.docs.feathersjs.com/migrating.html#database-adapters](https://crow.docs.feathersjs.com/migrating.html#database-adapters).
+
+The following breaking changes have been introduced:
+
+- All methods allow additional query parameters
+- Multiple updates are disabled by default (see the `multi` option)
+- Cassandra related operators are disabled by default (see the `whitelist` option)
+
 ## License
 
-Copyright © 2018
+Copyright © 2019
 
 Licensed under the [MIT license](LICENSE).

@@ -1,10 +1,8 @@
-const Proto = require('uberproto')
-const types = require('cassandra-driver').types
-const { filterQuery: filterQueryCommon } = require('@feathersjs/commons')
+const { AdapterService } = require('@feathersjs/adapter-commons')
 const errors = require('@feathersjs/errors')
+const types = require('cassandra-driver').types
 const flatten = require('arr-flatten')
-const isPlainObject = require('is-plain-object')
-const _isEqual = require('lodash.isequal')
+const utils = require('./utils')
 const errorHandler = require('./error-handler')
 
 const METHODS = {
@@ -22,33 +20,22 @@ const METHODS = {
   $decrement: 'decrement'
 }
 
-const QUERY_OPERATORS = [
-  '$eq',
-  '$ne', // applicable for IF conditions only
-  '$isnt', // applicable for materialized view filters only
-  '$gt',
-  '$lt',
-  '$gte',
-  '$lte',
-  '$in',
-  '$nin', // not supported
-  '$like', // applicable for SASI indexes only
-  '$token', // applicable for token queries only
-  '$keys', // applicable for token queries only
-  '$condition', // applicable for token queries only
-  '$contains', // applicable for indexed collections only
-  '$containsKey', // applicable for indexed maps only
-  '$or', // not supported
-  '$and',
-  '$if',
-  '$ifExists',
-  '$ifNotExists',
-  '$allowFiltering',
-  '$limitPerPartition',
-  '$minTimeuuid',
-  '$maxTimeuuid',
-  '$filters'
-]
+const OPERATORS = {
+  eq: '$eq',
+  ne: '$ne', // applicable for IF conditions only
+  gte: '$gte',
+  gt: '$gt',
+  lte: '$lte',
+  lt: '$lt',
+  in: '$in',
+  notIn: '$nin', // not supported
+  like: '$like', // applicable for SASI indexes only
+  notLike: '$notLike', // not supported
+  ilike: '$ilike', // not supported
+  notILike: '$notILike', // not supported
+  or: '$or', // not supported
+  and: '$and'
+}
 
 const OPERATORS_MAP = {
   $eq: '=',
@@ -60,64 +47,132 @@ const OPERATORS_MAP = {
   $lte: '<=',
   $in: 'IN',
   $nin: 'NOT IN', // not supported
-  $like: 'LIKE', // applicable for sasi indexes only
+  $like: 'LIKE', // applicable for SASI indexes only
+  $notLike: 'NOT LIKE', // not supported
+  $iLike: 'ILIKE', // not supported
+  $notILike: 'NOT ILIKE', // not supported
   $contains: 'CONTAINS', // applicable for indexed collections only
   $containsKey: 'CONTAINS KEY' // applicable for indexed maps only
+}
+
+const defaultOperators = Op => {
+  return {
+    $eq: Op.eq,
+    $ne: Op.ne,
+    $gte: Op.gte,
+    $gt: Op.gt,
+    $lte: Op.lte,
+    $lt: Op.lt,
+    $in: Op.in,
+    $nin: Op.notIn,
+    $like: Op.like,
+    $notLike: Op.notLike,
+    $iLike: Op.ilike,
+    $notILike: Op.notILike,
+    $or: Op.or,
+    $and: Op.and
+  }
 }
 
 /**
  * Class representing a feathers adapter for ExpressCassandra ORM & CassanKnex query builder.
  * @param {object} options
- * @param {string} [options.id='id'] - database id field
  * @param {string} [options.idSeparator=','] - id field primary keys separator char
  * @param {object} options.model - an ExpressCassandra model
  * @param {object} options.paginate
  * @param {object} options.events
  */
-class Service {
+class Service extends AdapterService {
   constructor (options) {
-    if (!options) {
-      throw new errors.GeneralError('FeathersCassandra options have to be provided')
-    }
-
     if (!options.model) {
       throw new errors.GeneralError('You must provide an ExpressCassandra Model')
     }
 
-    const id = flatten(options.model._properties.schema.key)
+    let id = flatten(options.model._properties.schema.key)
 
-    this.options = options
-    this.id = id.length === 1 ? id[0] : id
+    const operators = defaultOperators(OPERATORS)
+    const whitelist = Object.keys(operators).concat(options.whitelist || [])
+
+    super(Object.assign({
+      id: id.length === 1 ? id[0] : id,
+      operators,
+      whitelist
+    }, options))
+
+    this.whitelist = whitelist
+    this.idSeparator = options.idSeparator || ','
     this.keyspace = options.model.get_keyspace_name()
     this.tableName = options.model.get_table_name()
-    this.idSeparator = options.idSeparator || ','
-    this.paginate = options.paginate || {}
-    this.events = options.events || []
     this.materializedViews = options.materializedViews || []
-    this.Model = options.model
     this.modelOptions = options.model._properties.schema.options || {}
     this.fields = options.model._properties.schema.fields
     this.filters = options.model._properties.schema.filters || {}
   }
 
-  extend (obj) {
-    return Proto.extend(obj, this)
+  get Model () {
+    return this.options.model
   }
 
-  extractIds (id) {
-    if (typeof id === 'object') { return this.id.map(idKey => id[idKey]) }
-    if (id[0] === '[' && id[id.length - 1] === ']') { return JSON.parse(id) }
-    if (id[0] === '{' && id[id.length - 1] === '}') {
-      const obj = JSON.parse(id)
-      return Object.keys(obj).map(key => obj[key])
+  getModel (params) {
+    return this.options.model
+  }
+
+  filterQuery (params) {
+    const filter = query => {
+      Object.keys(query).forEach(key => {
+        const value = query[key]
+
+        if (key[0] !== '$' && this.fields[key] && utils.getFieldType(this.fields[key]) === 'boolean' && typeof value === 'string') {
+          query[key] = (value !== '' && value !== '0' && value !== 'false')
+        } else if (value instanceof types.Uuid || Buffer.isBuffer(value)) {
+          query[key] = value.toString()
+        } else if (Array.isArray(value)) {
+          value.forEach((fieldValue, fieldKey) => {
+            if (fieldValue instanceof types.Uuid || Buffer.isBuffer(fieldValue)) {
+              query[key][fieldKey] = fieldValue.toString()
+            }
+          })
+        } else if (utils.isPlainObject(value)) {
+          return filter(value)
+        }
+      })
     }
 
-    if (typeof id !== 'string' || !id.includes(this.idSeparator)) { throw new errors.BadRequest('When using composite primary key, id must contain values for all primary keys') }
+    if (params.query) {
+      filter(params.query)
+    }
 
-    return id.split(this.idSeparator)
+    const filtered = super.filterQuery(params, { operators: this.whitelist })
+    const operators = this.options.operators
+    const convertOperators = query => {
+      if (Array.isArray(query)) {
+        return query.map(convertOperators)
+      }
+
+      if (utils.isPlainObject(query)) {
+        return query
+      }
+
+      return Object.keys(query).reduce((result, prop) => {
+        const value = query[prop]
+        const key = operators[prop] ? operators[prop] : prop
+
+        result[key] = convertOperators(value)
+
+        return result
+      }, {})
+    }
+
+    filtered.query = convertOperators(filtered.query)
+
+    return filtered
   }
 
-  // Create a new query that re-queries all ids that were originally changed
+  /**
+   * Create a new query that re-queries all ids that were originally changed
+   * @param id
+   * @param idList
+   */
   getIdsQuery (id, idList) {
     const query = {}
 
@@ -125,7 +180,7 @@ class Service {
       let ids = id
 
       if (id && !Array.isArray(id)) {
-        ids = this.extractIds(id)
+        ids = utils.extractIds(id, this.id, this.idSeparator)
       }
 
       this.id.forEach((idKey, index) => {
@@ -150,142 +205,6 @@ class Service {
     return query
   }
 
-  runFilters (params, query, filtersExpression) {
-    const filters = []
-    const filtersNames = filtersExpression.replace(/[^a-zA-Z0-9_,]/g, '').split(',')
-
-    for (const name of filtersNames) {
-      if (name && this.filters[name]) { filters.push(this.filters[name]) }
-    }
-
-    for (const filter of filters) { filter(query) }
-
-    return filters
-  }
-
-  getMaterializedView (query, materializedViews) {
-    let keys = Object.keys(query)
-
-    if (materializedViews.length > 0 && keys.length > 0) {
-      for (const mv of materializedViews) {
-        if (_isEqual(mv.keys.sort(), keys.sort())) { return mv.view }
-      }
-    }
-
-    return null
-  }
-
-  prepareData (query, data) {
-    for (const field of Object.keys(data)) {
-      const value = data[field]
-      let removeKey = false
-
-      if (isPlainObject(value)) {
-        const key = Object.keys(value)[0]
-        const fieldValue = value[key]
-
-        if (key === '$add' || key === '$remove' || key === '$increment' || key === '$decrement') {
-          query[METHODS[key]](field, key === '$add' && Array.isArray(fieldValue) ? [fieldValue] : fieldValue)
-          removeKey = true
-        }
-      }
-
-      if (removeKey) {
-        delete data[field]
-      }
-    }
-  }
-
-  setTimestampFields (data, updatedAt, createdAt) {
-    const timestamps = this.modelOptions.timestamps
-
-    if (timestamps) {
-      const now = new Date().toISOString()
-      const createdAtFieldName = 'createdAt'
-      const updatedAtFieldName = 'updatedAt'
-
-      if (createdAt && timestamps.createdAt) {
-        data[typeof timestamps.createdAt === 'string' ? timestamps.createdAt : createdAtFieldName] = now
-      }
-      if (updatedAt && timestamps.updatedAt) {
-        data[typeof timestamps.updatedAt === 'string' ? timestamps.updatedAt : updatedAtFieldName] = now
-      }
-    }
-  }
-
-  setVersionField (data) {
-    const versions = this.modelOptions.versions
-
-    if (versions) {
-      const timeuuidVersion = types.TimeUuid.now()
-      const versionFieldName = '__v'
-
-      data[typeof versions.key === 'string' ? versions.key : versionFieldName] = timeuuidVersion
-    }
-  }
-
-  getHookOptions (query = {}) {
-    const options = {}
-
-    Object.keys(query).forEach(key => {
-      if (key[0] === '$') {
-        const optionName = key.substr(1).replace(/([A-Z])/g, (match, p1) => '_' + p1.toLowerCase())
-        options[optionName] = query[key]
-      }
-    })
-
-    return options
-  }
-
-  filterQuery (query, options = {}) {
-    const filter = query => {
-      Object.keys(query).forEach(key => {
-        const value = query[key]
-
-        if (key[0] !== '$' && this.fields[key] && this.getFieldType(this.fields[key]) === 'boolean' && typeof value === 'string') {
-          query[key] = (value !== '' && value !== '0' && value !== 'false')
-        } else if (value instanceof types.Uuid || Buffer.isBuffer(value)) {
-          query[key] = value.toString()
-        } else if (Array.isArray(value)) {
-          value.forEach((fieldValue, fieldKey) => {
-            if (fieldValue instanceof types.Uuid || Buffer.isBuffer(fieldValue)) {
-              query[key][fieldKey] = fieldValue.toString()
-            }
-          })
-        } else if (isPlainObject(value)) {
-          return filter(value)
-        }
-      })
-    }
-
-    filter(query)
-
-    return filterQueryCommon(query, options)
-  }
-
-  prepareIfCondition (id, query) {
-    if (id !== null && !query.$if) {
-      query.$if = {}
-
-      Object.keys(query).forEach(key => {
-        const idField = Array.isArray(this.id) ? this.id.includes(key) : key === this.id
-
-        if (!idField && key[0] !== '$') {
-          query.$if[key] = query[key]
-          delete query[key]
-        }
-      })
-    }
-  }
-
-  getFieldType (field) {
-    return isPlainObject(field) ? field.type : field
-  }
-
-  getFieldRule (field) {
-    return isPlainObject(field) ? field.rule : null
-  }
-
   /**
    * Maps a feathers query to the CassanKnex schema builder functions.
    * @param query - a query object. i.e. { type: 'fish', age: { $lte: 5 }
@@ -296,7 +215,7 @@ class Service {
   objectify (query, params, parentKey, methodKey) {
     if (params.$filters) { delete params.$filters }
     if (params.$allowFiltering) { delete params.$allowFiltering }
-    if (params.$ttl) { delete params.$ttl }
+    if (!isNaN(params.$ttl)) { delete params.$ttl }
     if (params.$timestamp) { delete params.$timestamp }
     if (params.$noSelect) { delete params.$noSelect }
     if (params.$limitPerPartition) { delete params.$limitPerPartition }
@@ -306,7 +225,7 @@ class Service {
 
       let value = params[key]
 
-      if (isPlainObject(value)) {
+      if (utils.isPlainObject(value)) {
         return this.objectify(query, value, key, parentKey)
       }
 
@@ -409,8 +328,8 @@ class Service {
 
     for (const field of fields) {
       let value = data[field]
-      const fieldRule = this.getFieldRule(this.fields[field])
-      const fieldType = this.getFieldType(this.fields[field])
+      const fieldRule = utils.getFieldRule(this.fields[field])
+      const fieldType = utils.getFieldType(this.fields[field])
 
       if (value === undefined || value === null) {
         if (fieldRule && fieldRule.required) { throw new errors.BadRequest(`\`${field}\` field is required`) }
@@ -418,7 +337,7 @@ class Service {
 
       let methodKey = null
 
-      if (value && isPlainObject(value) && METHODS[Object.keys(value)[0]]) {
+      if (value && utils.isPlainObject(value) && METHODS[Object.keys(value)[0]]) {
         methodKey = Object.keys(value)[0]
       }
 
@@ -450,165 +369,94 @@ class Service {
     }
   }
 
-  prepareUpdateResult (data, oldData, newObject) {
-    Object.keys(data).forEach(field => {
-      const fieldType = this.getFieldType(this.fields[field])
-      const value = data[field]
-      const oldFieldValue = oldData[field]
-
-      if (fieldType && ['map', 'list', 'set'].includes(fieldType) && isPlainObject(value)) {
-        const methodKey = Object.keys(value)[0]
-        const fieldValue = value[methodKey]
-
-        if (methodKey === '$add') {
-          if (fieldType === 'map') {
-            newObject[field] = oldFieldValue ? Object.assign({}, oldFieldValue, fieldValue) : fieldValue
-          } else if (fieldType === 'list') {
-            newObject[field] = oldFieldValue ? oldFieldValue.concat(fieldValue) : fieldValue
-          } else if (fieldType === 'set') {
-            newObject[field] = Array.from(new Set(oldFieldValue ? oldFieldValue.concat(fieldValue) : fieldValue)).sort()
-          }
-        } else if (methodKey === '$remove' && oldFieldValue) {
-          if (fieldType === 'map') {
-            newObject[field] = oldFieldValue
-            fieldValue.forEach(prop => delete newObject[field][prop])
-
-            if (!Object.keys(newObject[field]).length) {
-              newObject[field] = null
-            }
-          } else if (fieldType === 'list' || fieldType === 'set') {
-            newObject[field] = oldFieldValue.filter(val => !fieldValue.includes(val))
-
-            if (!newObject[field].length) {
-              newObject[field] = null
-            }
-          }
-        }
-      } else if (fieldType === 'set') {
-        newObject[field] = Array.from(new Set(value)).sort()
-      } else if (fieldType === 'counter' && isPlainObject(value)) {
-        const methodKey = Object.keys(value)[0]
-        const fieldValue = value[methodKey]
-
-        if (methodKey === '$increment') {
-          newObject[field] = oldFieldValue.add(Number(fieldValue))
-        } else if (methodKey === '$decrement') {
-          newObject[field] = oldFieldValue.subtract(Number(fieldValue))
-        }
-      }
-    })
-  }
-
-  exec (query, params) {
-    return new Promise((resolve, reject) => {
-      const callback = (err, res) => {
-        if (err) return reject(err)
-        resolve(res)
-      }
-
-      if (params && params.queryOptions) {
-        query.exec(params.queryOptions, callback)
-      } else {
-        query.exec(callback)
-      }
-    })
-  }
-
-  _find (params, count, getFilter = this.filterQuery.bind(this)) {
-    let allowFiltering = false
-    let filtersQueue = null
-    const { filters, query } = getFilter(params.query || {}, { operators: QUERY_OPERATORS })
-    const materializedView = this.getMaterializedView(query, this.materializedViews)
-    const q = this.createQuery(filters, query)
-
-    if (materializedView) { q.from(materializedView) }
-
-    if (params.query) {
-      if (params.query.$allowFiltering) {
-        allowFiltering = true
-        q.allowFiltering()
-        delete params.query.$allowFiltering
-      }
-
-      if (params.query.$filters) {
-        filtersQueue = this.runFilters(params, q, params.query.$filters)
-        delete params.query.$filters
-      }
-
-      if (params.query.$limitPerPartition) {
-        q.limitPerPartition(params.query.$limitPerPartition)
-        delete params.query.$limitPerPartition
-      }
-    }
-
-    if (filters.$limit) {
-      q.limit(filters.$limit)
-    }
-
-    let executeQuery = res => {
-      const total = res ? Number(res.rows[0].count) : undefined
-
-      return this.exec(q, params)
-        .then(res => {
-          return {
-            total,
-            limit: filters.$limit,
-            data: res.rows
-          }
-        })
-    }
-
-    if (filters.$limit === 0) {
-      executeQuery = res => {
-        const total = res ? Number(res.rows[0].count) : undefined
-
-        return Promise.resolve({
-          total,
-          limit: filters.$limit,
-          data: []
-        })
-      }
-    }
-
-    if (count) {
-      let countQuery = this._createQuery()
-        .select()
-        .count('*')
-
-      if (allowFiltering) { countQuery.allowFiltering() }
-
-      if (filtersQueue) {
-        for (const filter of filtersQueue) { filter(countQuery) }
-      }
-
-      this.objectify(countQuery, query)
-
-      return this.exec(countQuery, params)
-        .then(res => {
-          return executeQuery(res)
-        })
-        .catch(errorHandler)
-    }
-
-    return executeQuery().catch(errorHandler)
-  }
-
   /**
    * `find` service function for FeathersCassandra.
    * @param params
    */
-  find (params) {
-    const paginate =
-      params && typeof params.paginate !== 'undefined'
-        ? params.paginate
-        : this.paginate
+  _find (params) {
+    const find = (params, count, filters, query) => {
+      let allowFiltering = false
+      let filtersQueue = null
+      const materializedView = utils.getMaterializedView(query, this.materializedViews)
+      const q = this.createQuery(filters, query)
 
-    const result = this._find(params, !!paginate.default, query =>
-      this.filterQuery(query, { paginate, operators: QUERY_OPERATORS })
-    )
+      if (materializedView) { q.from(materializedView) }
 
-    if (!paginate.default) {
-      return result.then(page => page.data)
+      if (params.query) {
+        if (params.query.$allowFiltering) {
+          allowFiltering = true
+          q.allowFiltering()
+          delete params.query.$allowFiltering
+        }
+
+        if (params.query.$filters) {
+          filtersQueue = utils.runFilters(params, q, params.query.$filters, this.filters)
+          delete params.query.$filters
+        }
+
+        if (params.query.$limitPerPartition) {
+          q.limitPerPartition(params.query.$limitPerPartition)
+          delete params.query.$limitPerPartition
+        }
+      }
+
+      if (filters.$limit) {
+        q.limit(filters.$limit)
+      }
+
+      let executeQuery = res => {
+        const total = res ? Number(res.rows[0].count) : undefined
+
+        return utils.exec(q, params)
+          .then(res => {
+            return {
+              total,
+              limit: filters.$limit,
+              data: res.rows
+            }
+          })
+      }
+
+      if (filters.$limit === 0) {
+        executeQuery = res => {
+          const total = res ? Number(res.rows[0].count) : undefined
+
+          return Promise.resolve({
+            total,
+            limit: filters.$limit,
+            data: []
+          })
+        }
+      }
+
+      if (count) {
+        let countQuery = this._createQuery()
+          .select()
+          .count('*')
+
+        if (allowFiltering) { countQuery.allowFiltering() }
+
+        if (filtersQueue) {
+          for (const filter of filtersQueue) { filter(countQuery) }
+        }
+
+        this.objectify(countQuery, query)
+
+        return utils.exec(countQuery, params)
+          .then(res => {
+            return executeQuery(res)
+          })
+          .catch(errorHandler)
+      }
+
+      return executeQuery().catch(errorHandler)
+    }
+
+    const { filters, query, paginate } = this.filterQuery(params)
+    const result = find(params, Boolean(paginate && paginate.default), filters, query)
+
+    if (!paginate || !paginate.default) {
+      return result.then(page => page.data || page)
     }
 
     return result
@@ -619,74 +467,14 @@ class Service {
 
     return this._find(Object.assign({}, params, { query }))
       .then(page => {
-        if (page.data.length !== 1) {
+        const data = page.data || page
+
+        if (data.length !== 1) {
           throw new errors.NotFound(`No record found for id '${id}'`)
         }
 
-        return page.data[0]
+        return data[0]
       })
-  }
-
-  /**
-   * `get` service function for FeathersCassandra.
-   * @param {...object} args
-   * @return {Promise} - promise containing the data being retrieved
-   */
-  get (...args) {
-    return this._get(...args)
-  }
-
-  _create (data, params) {
-    this.validate(data)
-    this.setTimestampFields(data, true, true)
-    this.setVersionField(data)
-
-    const beforeHook = this.Model._properties.schema.before_save
-    const afterHook = this.Model._properties.schema.after_save
-    const hookOptions = this.getHookOptions(params.query)
-
-    if (beforeHook && beforeHook(data, hookOptions) === false) { throw new errors.BadRequest('Error in before_save lifecycle function') }
-
-    let q = this._createQuery('create')
-
-    if (params.query) {
-      if (params.query.$ifNotExists) {
-        q.ifNotExists()
-        delete params.query.$ifNotExists
-      }
-
-      if (!isNaN(params.query.$ttl)) {
-        q.usingTTL(Number(params.query.$ttl))
-        delete params.query.$ttl
-      }
-
-      if (params.query.$timestamp) {
-        q.usingTimestamp(params.query.$timestamp)
-        delete params.query.$timestamp
-      }
-    }
-
-    return this.exec(q.insert(data), params)
-      .then(row => {
-        if (afterHook && afterHook(data, hookOptions) === false) { throw new errors.BadRequest('Error in after_save lifecycle function') }
-
-        if (params.query && params.query.$noSelect) { return data }
-
-        let id = null
-
-        if (Array.isArray(this.id)) {
-          id = []
-
-          for (const idKey of this.id) {
-            id.push(typeof data[idKey] !== 'undefined' ? data[idKey] : row[idKey])
-          }
-        } else {
-          id = typeof data[this.id] !== 'undefined' ? data[this.id] : row[this.id]
-        }
-
-        return this._get(id, params)
-      })
-      .catch(errorHandler)
   }
 
   /**
@@ -694,92 +482,65 @@ class Service {
    * @param {object} data
    * @param {object} params
    */
-  create (data, params) {
+  _create (data, params) {
+    const create = (data, params) => {
+      this.validate(data)
+      utils.setTimestampFields(data, true, true, this.modelOptions.timestamps)
+      utils.setVersionField(data, this.modelOptions.versions)
+
+      const beforeHook = this.Model._properties.schema.before_save
+      const afterHook = this.Model._properties.schema.after_save
+      const hookOptions = utils.getHookOptions(params.query)
+
+      if (beforeHook && beforeHook(data, hookOptions) === false) { throw new errors.BadRequest('Error in before_save lifecycle function') }
+
+      let q = this._createQuery('create')
+
+      if (params.query) {
+        if (params.query.$ifNotExists) {
+          q.ifNotExists()
+          delete params.query.$ifNotExists
+        }
+
+        if (!isNaN(params.query.$ttl)) {
+          q.usingTTL(Number(params.query.$ttl))
+          delete params.query.$ttl
+        }
+
+        if (params.query.$timestamp) {
+          q.usingTimestamp(params.query.$timestamp)
+          delete params.query.$timestamp
+        }
+      }
+
+      return utils.exec(q.insert(data), params)
+        .then(row => {
+          if (afterHook && afterHook(data, hookOptions) === false) { throw new errors.BadRequest('Error in after_save lifecycle function') }
+
+          if (params.query && params.query.$noSelect) { return data }
+
+          let id = null
+
+          if (Array.isArray(this.id)) {
+            id = []
+
+            for (const idKey of this.id) {
+              id.push(typeof data[idKey] !== 'undefined' ? data[idKey] : row[idKey])
+            }
+          } else {
+            id = typeof data[this.id] !== 'undefined' ? data[this.id] : row[this.id]
+          }
+
+          return this._get(id, params)
+        })
+        .catch(errorHandler)
+    }
+
     if (Array.isArray(data)) {
-      return Promise.all(data.map(current => this._create(current, params)))
+      return Promise.all(data.map(current => create(current, params)))
     }
 
-    return this._create(data, params)
-  }
-
-  _update (id, data, params, oldData) {
-    const fields = Object.keys(oldData || this.fields)
-    const createdAtField = this.modelOptions.timestamps && this.modelOptions.timestamps.createdAt
-    let newObject = {}
-
-    // Set missing fields to null
-    for (const key of fields) {
-      if (data[key] === undefined) {
-        if (!createdAtField || key !== createdAtField) {
-          newObject[key] = null
-        }
-      } else {
-        newObject[key] = data[key]
-      }
-    }
-
-    // Delete id field so we don't update it
-    if (Array.isArray(this.id)) {
-      for (const idKey of this.id) {
-        delete newObject[idKey]
-      }
-    } else {
-      delete newObject[this.id]
-    }
-
-    const q = this._createQuery('update')
-    const idsQuery = this.getIdsQuery(id)
-
-    if (params.query && !isNaN(params.query.$ttl)) {
-      q.usingTTL(Number(params.query.$ttl))
-      delete params.query.$ttl
-    }
-
-    if (params.query && params.query.$timestamp) {
-      q.usingTimestamp(params.query.$timestamp)
-      delete params.query.$timestamp
-    }
-
-    this.prepareData(q, newObject)
-
-    q.set(newObject)
-
-    Object.keys(idsQuery).forEach(key => {
-      q.where(key, '=', idsQuery[key])
-    })
-
-    if (!oldData) {
-      const query = this.filterQuery(params.query || {}, { operators: QUERY_OPERATORS }).query
-      this.prepareIfCondition(id, query)
-      this.objectify(q, query)
-    }
-
-    return this.exec(q, params)
-      .then(() => {
-        // Restore the createdAt field so we can return it to the client
-        if (createdAtField && !newObject[createdAtField] && oldData) { newObject[createdAtField] = oldData[createdAtField] }
-
-        // Restore the id field so we can return it to the client
-        if (Array.isArray(this.id)) {
-          newObject = Object.assign({}, newObject, this.getIdsQuery(id))
-        } else {
-          newObject[this.id] = id
-        }
-
-        if (oldData) {
-          this.prepareUpdateResult(data, oldData, newObject)
-        }
-
-        if (params.query && params.query.$select) {
-          const selectedFields = {}
-          for (const field of params.query.$select) { selectedFields[field] = newObject[field] }
-
-          return selectedFields
-        }
-
-        return newObject
-      })
-      .catch(errorHandler)
+    return create(data, params)
   }
 
   /**
@@ -788,27 +549,101 @@ class Service {
    * @param data
    * @param params
    */
-  update (id, data, params) {
-    if (Array.isArray(data)) {
-      return Promise.reject(
-        new errors.BadRequest('Not replacing multiple records. Did you mean `patch`?')
-      )
+  _update (id, data, params) {
+    const update = (id, data, params, oldData) => {
+      const fields = Object.keys(oldData || this.fields)
+      const createdAtField = this.modelOptions.timestamps && this.modelOptions.timestamps.createdAt
+      let newObject = {}
+
+      // Set missing fields to null
+      for (const key of fields) {
+        if (data[key] === undefined) {
+          if (!createdAtField || key !== createdAtField) {
+            newObject[key] = null
+          }
+        } else {
+          newObject[key] = data[key]
+        }
+      }
+
+      // Delete id field so we don't update it
+      if (Array.isArray(this.id)) {
+        for (const idKey of this.id) {
+          delete newObject[idKey]
+        }
+      } else {
+        delete newObject[this.id]
+      }
+
+      const q = this._createQuery('update')
+      const idsQuery = this.getIdsQuery(id)
+
+      if (params.query && !isNaN(params.query.$ttl)) {
+        q.usingTTL(Number(params.query.$ttl))
+        delete params.query.$ttl
+      }
+
+      if (params.query && params.query.$timestamp) {
+        q.usingTimestamp(params.query.$timestamp)
+        delete params.query.$timestamp
+      }
+
+      utils.prepareData(q, newObject, METHODS)
+
+      q.set(newObject)
+
+      Object.keys(idsQuery).forEach(key => {
+        q.where(key, '=', idsQuery[key])
+      })
+
+      if (!oldData) {
+        const query = this.filterQuery(params).query
+        utils.prepareIfCondition(id, query, this.id)
+        this.objectify(q, query)
+      }
+
+      return utils.exec(q, params)
+        .then(() => {
+          // Restore the createdAt field so we can return it to the client
+          if (createdAtField && !newObject[createdAtField] && oldData) { newObject[createdAtField] = oldData[createdAtField] }
+
+          // Restore the id field so we can return it to the client
+          if (Array.isArray(this.id)) {
+            newObject = Object.assign({}, newObject, this.getIdsQuery(id))
+          } else {
+            newObject[this.id] = id
+          }
+
+          if (oldData) {
+            utils.prepareUpdateResult(data, oldData, newObject, this.fields)
+          }
+
+          if (params.query && params.query.$select) {
+            const selectedFields = {}
+            for (const field of params.query.$select) { selectedFields[field] = newObject[field] }
+
+            return selectedFields
+          }
+
+          return newObject
+        })
+        .catch(errorHandler)
     }
 
     this.validate(data, 'update')
-    this.setTimestampFields(data, true)
-    this.setVersionField(data)
+    utils.setTimestampFields(data, true, false, this.modelOptions.timestamps)
+    utils.setVersionField(data, this.modelOptions.versions)
 
     const beforeHook = this.Model._properties.schema.before_update
     const afterHook = this.Model._properties.schema.after_update
-    const hookOptions = this.getHookOptions(params.query)
+    const hookOptions = utils.getHookOptions(params.query)
 
     if (beforeHook && beforeHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in before_update lifecycle function') }
 
     if (params.query && params.query.$noSelect) {
       delete params.query.$noSelect
 
-      return this._update(id, data, params)
+      return update(id, data, params)
         .then(data => {
           if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function') }
           return data
@@ -817,7 +652,7 @@ class Service {
 
     return this._get(id, params)
       .then(oldData => {
-        return this._update(id, data, params, oldData)
+        return update(id, data, params, oldData)
           .then(data => {
             if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function') }
             return data
@@ -831,23 +666,23 @@ class Service {
    * @param data
    * @param params
    */
-  patch (id, data, params) {
+  _patch (id, data, params) {
     this.validate(data, 'patch')
-    this.setTimestampFields(data, true)
-    this.setVersionField(data)
+    utils.setTimestampFields(data, true, false, this.modelOptions.timestamps)
+    utils.setVersionField(data, this.modelOptions.versions)
 
     const beforeHook = this.Model._properties.schema.before_update
     const afterHook = this.Model._properties.schema.after_update
-    const hookOptions = this.getHookOptions(params.query)
+    const hookOptions = utils.getHookOptions(params.query)
 
     if (beforeHook && beforeHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in before_update lifecycle function') }
 
-    let query = this.filterQuery(params.query || {}, { operators: QUERY_OPERATORS }).query
+    let { filters, query } = this.filterQuery(params)
     const dataCopy = Object.assign({}, data)
 
     const mapIds = page => Array.isArray(this.id)
-      ? this.id.map(idKey => [...new Set(page.data.map(current => current[idKey]))])
-      : page.data.map(current => current[this.id])
+      ? this.id.map(idKey => [...new Set((page.data || page).map(current => current[idKey]))])
+      : (page.data || page).map(current => current[this.id])
 
     // By default we will just query for the one id. For multi patch
     // we create a list of the ids of all items that will be changed
@@ -877,7 +712,7 @@ class Service {
       }
     }
 
-    this.prepareIfCondition(id, query)
+    utils.prepareIfCondition(id, query, this.id)
     this.objectify(q, query)
 
     if (Array.isArray(this.id)) {
@@ -892,25 +727,20 @@ class Service {
       .then(idList => {
         // Create a new query that re-queries all ids that
         // were originally changed
-        const findParams = Object.assign({}, params, {
-          query: Object.assign(
-            {},
-            this.getIdsQuery(id, idList),
-            params.query && params.query.$select ? { $select: params.query.$select } : {}
-          )
-        })
+        const selectParam = filters.$select ? { $select: filters.$select } : undefined
+        const findParams = Object.assign({}, params, { query: Object.assign({}, this.getIdsQuery(id, idList), selectParam) })
 
-        this.prepareData(q, dataCopy)
+        utils.prepareData(q, dataCopy, METHODS)
 
         q.set(dataCopy)
 
-        return this.exec(q, params)
+        return utils.exec(q, params)
           .then(() => {
             if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function') }
 
             return params.query && params.query.$noSelect ? {} : this._find(findParams)
               .then(page => {
-                const items = page.data
+                const items = page.data || page
 
                 if (id !== null) {
                   if (items.length === 1) {
@@ -918,6 +748,8 @@ class Service {
                   } else {
                     throw new errors.NotFound(`No record found for id '${id}'`)
                   }
+                } else if (!items.length) {
+                  throw new errors.NotFound(`No record found for id '${id}'`)
                 }
 
                 return items
@@ -932,10 +764,10 @@ class Service {
    * @param id
    * @param params
    */
-  remove (id, params) {
+  _remove (id, params) {
     const beforeHook = this.Model._properties.schema.before_delete
     const afterHook = this.Model._properties.schema.after_delete
-    const hookOptions = this.getHookOptions(params.query)
+    const hookOptions = utils.getHookOptions(params.query)
 
     if (beforeHook && beforeHook(params.query, hookOptions, id) === false) { throw new errors.BadRequest('Error in before_delete lifecycle function') }
 
@@ -951,14 +783,14 @@ class Service {
       }
     }
 
-    const { query: queryParams } = this.filterQuery(params.query || {}, { operators: QUERY_OPERATORS })
+    const { query: queryParams } = this.filterQuery(params)
     const query = this._createQuery('delete')
 
-    this.prepareIfCondition(id, queryParams)
+    utils.prepareIfCondition(id, queryParams, this.id)
     this.objectify(query, queryParams)
 
     if (params.query && params.query.$noSelect) {
-      return this.exec(query, params)
+      return utils.exec(query, params)
         .then(() => {
           if (afterHook && afterHook(params.query, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_delete lifecycle function') }
           return {}
@@ -967,9 +799,9 @@ class Service {
     } else {
       return this._find(params)
         .then(page => {
-          const items = page.data
+          const items = page.data || page
 
-          return this.exec(query, params)
+          return utils.exec(query, params)
             .then(() => {
               if (afterHook && afterHook(params.query, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_delete lifecycle function') }
 
@@ -979,6 +811,8 @@ class Service {
                 } else {
                   throw new errors.NotFound(`No record found for id '${id}'`)
                 }
+              } else if (!items.length) {
+                throw new errors.NotFound(`No record found for id '${id}'`)
               }
 
               return items

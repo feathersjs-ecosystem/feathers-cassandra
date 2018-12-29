@@ -7,6 +7,8 @@ module.exports = function (app) {
   const options = {
     model: Model,
     idSeparator: '.',
+    multi: ['create'],
+    whitelist: ['$allowFiltering'],
     events: ['testing']
   }
 
