@@ -149,11 +149,11 @@ class Service extends AdapterService {
         return query.map(convertOperators)
       }
 
-      if (utils.isPlainObject(query)) {
+      if (!utils.isPlainObject(query)) {
         return query
       }
 
-      return Object.keys(query).reduce((result, prop) => {
+      const converted = Object.keys(query).reduce((result, prop) => {
         const value = query[prop]
         const key = operators[prop] ? operators[prop] : prop
 
@@ -161,6 +161,12 @@ class Service extends AdapterService {
 
         return result
       }, {})
+
+      Object.getOwnPropertySymbols(query).forEach(symbol => {
+        converted[symbol] = query[symbol]
+      })
+
+      return converted
     }
 
     filtered.query = convertOperators(filtered.query)
