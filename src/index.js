@@ -55,25 +55,6 @@ const OPERATORS_MAP = {
   $containsKey: 'CONTAINS KEY' // applicable for indexed maps only
 }
 
-const defaultOperators = Op => {
-  return {
-    $eq: Op.eq,
-    $ne: Op.ne,
-    $gte: Op.gte,
-    $gt: Op.gt,
-    $lte: Op.lte,
-    $lt: Op.lt,
-    $in: Op.in,
-    $nin: Op.notIn,
-    $like: Op.like,
-    $notLike: Op.notLike,
-    $iLike: Op.ilike,
-    $notILike: Op.notILike,
-    $or: Op.or,
-    $and: Op.and
-  }
-}
-
 /**
  * Class representing a feathers adapter for ExpressCassandra ORM & CassanKnex query builder.
  * @param {object} options
@@ -90,16 +71,13 @@ class Service extends AdapterService {
 
     let id = flatten(options.model._properties.schema.key)
 
-    const operators = defaultOperators(OPERATORS)
-    const whitelist = Object.keys(operators).concat(options.whitelist || [])
+    const whitelist = Object.values(OPERATORS).concat(options.whitelist || [])
 
     super(Object.assign({
       id: id.length === 1 ? id[0] : id,
-      operators,
       whitelist
     }, options))
 
-    this.whitelist = whitelist
     this.idSeparator = options.idSeparator || ','
     this.keyspace = options.model.get_keyspace_name()
     this.tableName = options.model.get_table_name()
@@ -142,36 +120,7 @@ class Service extends AdapterService {
       filter(params.query)
     }
 
-    const filtered = super.filterQuery(params, { operators: this.whitelist })
-    const operators = this.options.operators
-    const convertOperators = query => {
-      if (Array.isArray(query)) {
-        return query.map(convertOperators)
-      }
-
-      if (!utils.isPlainObject(query)) {
-        return query
-      }
-
-      const converted = Object.keys(query).reduce((result, prop) => {
-        const value = query[prop]
-        const key = operators[prop] ? operators[prop] : prop
-
-        result[key] = convertOperators(value)
-
-        return result
-      }, {})
-
-      Object.getOwnPropertySymbols(query).forEach(symbol => {
-        converted[symbol] = query[symbol]
-      })
-
-      return converted
-    }
-
-    filtered.query = convertOperators(filtered.query)
-
-    return filtered
+    return super.filterQuery(params)
   }
 
   /**

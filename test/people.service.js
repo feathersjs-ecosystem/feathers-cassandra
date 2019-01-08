@@ -7,7 +7,7 @@ module.exports = function (app) {
   const options = {
     model: Model,
     multi: ['create', 'patch', 'remove'],
-    whitelist: ['$token', '$noSelect', '$allowFiltering', '$filters', '$timestamp', '$ttl', '$if', '$ifExists'],
+    whitelist: ['$and', '$like', '$token', '$noSelect', '$allowFiltering', '$filters', '$timestamp', '$ttl', '$if', '$ifExists'],
     events: ['testing']
   }
 
