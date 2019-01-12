@@ -438,14 +438,13 @@ class Service extends AdapterService {
    * @param {object} params
    */
   _create (data, params) {
-    const create = (data, params, batch = false) => {
+    const create = (data, params, hookOptions, batch = false) => {
       this.validate(data)
       utils.setTimestampFields(data, true, true, this.modelOptions.timestamps)
       utils.setVersionField(data, this.modelOptions.versions)
 
       const beforeHook = this.Model._properties.schema.before_save
       const afterHook = this.Model._properties.schema.after_save
-      const hookOptions = utils.getHookOptions(params.query)
 
       if (beforeHook && beforeHook(data, hookOptions) === false) { throw new errors.BadRequest('Error in before_save lifecycle function') }
 
@@ -499,8 +498,15 @@ class Service extends AdapterService {
       const query = this.filterQuery(params).query
 
       if (query.$batch) {
-        return utils.batch(Service.cassanknex, data.map(current => create(current, params, true)), params)
+        const afterHook = this.Model._properties.schema.after_save
+        const hookOptions = utils.getHookOptions(query)
+
+        return utils.batch(Service.cassanknex, data.map(current => create(current, params, hookOptions, true)), params)
           .then(res => {
+            data.forEach(item => {
+              if (afterHook && afterHook(item, hookOptions) === false) { throw new errors.BadRequest('Error in after_save lifecycle function') }
+            })
+
             return data
           })
           .catch(errorHandler)
