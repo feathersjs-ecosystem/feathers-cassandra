@@ -247,7 +247,11 @@ describe('Feathers Cassandra service', () => {
             time: 4,
             admin: true
           }
-        ])
+        ], {
+          query: {
+            $batch: true
+          }
+        })
 
       await peopleRoomsCustomIdSeparator
         .patch([1, 2], {
@@ -1065,7 +1069,7 @@ describe('Feathers Cassandra service', () => {
   })
 
   describe('uuid & timeuuid', () => {
-    let uuid1 = null;
+    let uuid1 = null
     let timeuuid1 = null
     let uuid2 = null
     let timeuuid2 = null
@@ -2009,6 +2013,53 @@ describe('Feathers Cassandra service', () => {
               })
             })
           })
+        })
+      })
+    })
+  })
+
+  describe('$batch', function () {
+    const batchSize = 10
+
+    before(async () => {
+      for (let id = 1; id <= batchSize; id++) {
+        try {
+          await people.remove(id)
+        } catch (err) {}
+      }
+    })
+
+    afterEach(async () => {
+      for (let id = 1; id <= batchSize; id++) {
+        try {
+          await people.remove(id)
+        } catch (err) {}
+      }
+    })
+
+    it('create with $batch', () => {
+      const data = []
+
+      for (let id = 1; id <= batchSize; id++) {
+        data.push({
+          id,
+          name: 'John',
+          age: 10
+        })
+      }
+
+      return people.create(data, {
+        query: {
+          $batch: true
+        }
+      }).then(data => {
+        expect(data).to.be.instanceof(Array)
+        expect(data.length).to.equal(batchSize)
+        expect(data[0].name).to.equal('John')
+
+        return people.get(batchSize).then(data => {
+          expect(data).to.be.ok
+          expect(data.name).to.equal('John')
         })
       })
     })

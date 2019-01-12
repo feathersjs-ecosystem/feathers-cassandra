@@ -188,3 +188,18 @@ exports.exec = (query, params) => {
     }
   })
 }
+
+exports.batch = (cassanKnex, queries, params) => {
+  return new Promise((resolve, reject) => {
+    const callback = (err, res) => {
+      if (err) return reject(err)
+      resolve(res)
+    }
+
+    if (params && params.queryOptions) {
+      cassanKnex().batch({ prepare: true, ...params.queryOptions }, queries, callback)
+    } else {
+      cassanKnex().batch({ prepare: true }, queries, callback)
+    }
+  })
+}

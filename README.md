@@ -102,6 +102,7 @@ Starting at version 2.0.0 `feathers-cassandra` converts queries securely. If you
 | Operator | Native Operator | Description | Example |
 |:---: | :---: | --- | --- |
 | `$noSelect` |  | Skips SELECT queries in create, update, patch & remove requests. Response data will be based on the input data | `$noSelect: true` |
+| `$batch` |  | Batch create queries. Response data will be based on the input data | `$batch: true` |
 | `$filters` |  | Sets Model's CassanKnex filters to run on a get or find request | `$filters: ['completed', 'recent']` |
 
 ##### Cassandra Data Operators
