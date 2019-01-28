@@ -303,13 +303,13 @@ class Service extends AdapterService {
 
         if (valueToValidate) {
           if (fieldType === 'timeuuid') {
-            if (valueToValidate instanceof types.TimeUuid || Buffer.isBuffer(valueToValidate)) {
+            if (valueToValidate instanceof types.TimeUuid || valueToValidate.constructor.name === 'TimeUuid' || Buffer.isBuffer(valueToValidate)) {
               data[field] = valueToValidate.toString()
             } else {
               valueToValidate = types.TimeUuid.fromString(valueToValidate.toString())
             }
           } else if (fieldType === 'uuid') {
-            if (valueToValidate instanceof types.Uuid || Buffer.isBuffer(valueToValidate)) {
+            if (valueToValidate instanceof types.Uuid || valueToValidate.constructor.name === 'Uuid' || Buffer.isBuffer(valueToValidate)) {
               data[field] = valueToValidate.toString()
             } else {
               valueToValidate = types.Uuid.fromString(valueToValidate.toString())
