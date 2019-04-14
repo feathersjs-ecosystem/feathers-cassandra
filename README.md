@@ -111,8 +111,8 @@ Starting at version 2.0.0 `feathers-cassandra` converts queries securely. If you
 |:---: | :---: | --- | --- |
 | `$add` | `+` | Adds to a list, set or map | List/Set: `colors: { $add: ['blue', 'red'] }` Map: `colors: { $add: { dark: 'blue', bright: 'red' } }` |
 | `$remove` | `-` | Removes from a list, set or map | List/Set: `colors: { $remove: ['blue', 'red'] }` Map: `colors: { $remove: ['dark', 'bright'] }` |
-| `$increment` | `+` | Increments a counter | `days: { $increments: 2 }` |
-| `$decrement` | `-` | Decrements a counter | `days: { $decrements: 2 }` |
+| `$increment` | `+` | Increments a counter | `days: { $increment: 2 }` |
+| `$decrement` | `-` | Decrements a counter | `days: { $decrement: 2 }` |
 
 ### Passing Cassandra [queryOptions](https://docs.datastax.com/en/developer/nodejs-driver/3.3/api/type.QueryOptions/)
 
