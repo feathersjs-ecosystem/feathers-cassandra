@@ -1,5 +1,5 @@
 const createService = require('../src')
-const createModel = require('./people-customid.model')
+const createModel = require('./people-custom-id.model')
 
 module.exports = function (app) {
   const Model = createModel(app)
@@ -11,5 +11,5 @@ module.exports = function (app) {
     events: ['testing']
   }
 
-  app.use('/people-customid', createService(options))
+  app.use('/people-custom-id', createService(options))
 }

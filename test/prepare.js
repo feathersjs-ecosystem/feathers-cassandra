@@ -6,10 +6,6 @@ const FeathersCassandra = require('../src')
 const KEYSPACE = 'test'
 
 let app = null
-let people = null
-let peopleRooms = null
-let peopleRoomsCustomIdSeparator = null
-let peopleMv = null
 
 const exec = async (query) => {
   return new Promise((resolve, reject) => {
@@ -22,10 +18,12 @@ const exec = async (query) => {
 
 const truncateTables = async cassanknex => {
   await exec(cassanknex(KEYSPACE).truncate('people'))
-  await exec(cassanknex(KEYSPACE).truncate('people_customid'))
+  await exec(cassanknex(KEYSPACE).truncate('people_custom_id'))
   await exec(cassanknex(KEYSPACE).truncate('people_rooms'))
   await exec(cassanknex(KEYSPACE).truncate('people_rooms_custom_id_separator'))
   await exec(cassanknex(KEYSPACE).truncate('people_mv'))
+  await exec(cassanknex(KEYSPACE).truncate('adapter_tests_people'))
+  await exec(cassanknex(KEYSPACE).truncate('adapter_tests_people_custom_id'))
   await exec(cassanknex(KEYSPACE).truncate('todos'))
 }
 
@@ -78,21 +76,13 @@ const prepare = async () => {
       .set('models', models)
       .configure(knex)
       .configure(services)
-
-    people = app.service('people')
-    peopleRooms = app.service('people-rooms')
-    peopleRoomsCustomIdSeparator = app.service('people-rooms-custom-id-separator')
-    peopleMv = app.service('people-mv')
   })
 }
 
 module.exports = {
   prepare,
-  refs: {
-    app: () => app,
-    people: () => people,
-    peopleRooms: () => peopleRooms,
-    peopleRoomsCustomIdSeparator: () => peopleRoomsCustomIdSeparator,
-    peopleMv: () => peopleMv
+  app: {
+    get: name => app.get(name),
+    service: name => app.service(name)
   }
 }

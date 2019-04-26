@@ -4,13 +4,6 @@ WITH REPLICATION = {
   'replication_factor': 1
 };
 
-CREATE TABLE test.todos (
-  id int,
-  text text,
-  complete boolean,
-  PRIMARY KEY (id)
-);
-
 CREATE TABLE test.people (
   id int,
   age int,
@@ -20,13 +13,13 @@ CREATE TABLE test.people (
   PRIMARY KEY (id)
 );
 
-CREATE TABLE test.people_customid (
-  customid int,
+CREATE TABLE test.people_custom_id (
+  custom_id int,
   age int,
   created boolean,
   name text,
   time int,
-  PRIMARY KEY (customid)
+  PRIMARY KEY (custom_id)
 );
 
 CREATE TABLE test.people_rooms (
@@ -57,25 +50,64 @@ FROM test.people_mv
 WHERE name IS NOT NULL
 PRIMARY KEY (name, id);
 
-CREATE CUSTOM INDEX ON test.people (age) USING 'org.apache.cassandra.index.sasi.SASIIndex'
+CREATE TABLE test.adapter_tests_people (
+  id text,
+  name text,
+  age int,
+  created boolean,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE test.adapter_tests_people_custom_id (
+  custom_id text,
+  name text,
+  age int,
+  created boolean,
+  PRIMARY KEY (custom_id)
+);
+
+CREATE TABLE test.todos (
+  id int,
+  text text,
+  complete boolean,
+  PRIMARY KEY (id)
+);
+
+CREATE CUSTOM INDEX ON test.adapter_tests_people (name) USING 'org.apache.cassandra.index.sasi.SASIIndex'
+WITH OPTIONS = { 'mode': 'CONTAINS' };
+
+CREATE CUSTOM INDEX ON test.adapter_tests_people (age) USING 'org.apache.cassandra.index.sasi.SASIIndex'
 WITH OPTIONS = { 'mode': 'SPARSE' };
+
+CREATE CUSTOM INDEX ON test.adapter_tests_people (created) USING 'org.apache.cassandra.index.sasi.SASIIndex';
+
+CREATE CUSTOM INDEX ON test.adapter_tests_people_custom_id (name) USING 'org.apache.cassandra.index.sasi.SASIIndex'
+WITH OPTIONS = { 'mode': 'CONTAINS' };
+
+CREATE CUSTOM INDEX ON test.adapter_tests_people_custom_id (age) USING 'org.apache.cassandra.index.sasi.SASIIndex'
+WITH OPTIONS = { 'mode': 'SPARSE' };
+
+CREATE CUSTOM INDEX ON test.adapter_tests_people_custom_id (created) USING 'org.apache.cassandra.index.sasi.SASIIndex';
 
 CREATE CUSTOM INDEX ON test.people (name) USING 'org.apache.cassandra.index.sasi.SASIIndex'
 WITH OPTIONS = { 'mode': 'CONTAINS' };
+
+CREATE CUSTOM INDEX ON test.people (age) USING 'org.apache.cassandra.index.sasi.SASIIndex'
+WITH OPTIONS = { 'mode': 'SPARSE' };
 
 CREATE CUSTOM INDEX ON test.people (created) USING 'org.apache.cassandra.index.sasi.SASIIndex';
 
 CREATE CUSTOM INDEX ON test.people (time) USING 'org.apache.cassandra.index.sasi.SASIIndex';
 
-CREATE CUSTOM INDEX ON test.people_customid (age) USING 'org.apache.cassandra.index.sasi.SASIIndex'
+CREATE CUSTOM INDEX ON test.people_custom_id (age) USING 'org.apache.cassandra.index.sasi.SASIIndex'
 WITH OPTIONS = { 'mode': 'SPARSE' };
 
-CREATE CUSTOM INDEX ON test.people_customid (name) USING 'org.apache.cassandra.index.sasi.SASIIndex'
+CREATE CUSTOM INDEX ON test.people_custom_id (name) USING 'org.apache.cassandra.index.sasi.SASIIndex'
 WITH OPTIONS = { 'mode': 'CONTAINS' };
 
-CREATE CUSTOM INDEX ON test.people_customid (created) USING 'org.apache.cassandra.index.sasi.SASIIndex';
+CREATE CUSTOM INDEX ON test.people_custom_id (created) USING 'org.apache.cassandra.index.sasi.SASIIndex';
 
-CREATE CUSTOM INDEX ON test.people_customid (time) USING 'org.apache.cassandra.index.sasi.SASIIndex';
+CREATE CUSTOM INDEX ON test.people_custom_id (time) USING 'org.apache.cassandra.index.sasi.SASIIndex';
 
 CREATE CUSTOM INDEX ON test.people_rooms (admin) USING 'org.apache.cassandra.index.sasi.SASIIndex';
 

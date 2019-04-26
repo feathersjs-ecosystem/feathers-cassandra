@@ -1,9 +1,10 @@
 /* eslint-env mocha */
 /* eslint-disable no-unused-expressions */
 const { expect } = require('chai')
-const { prepare, refs } = require('./prepare')
+const { prepare, app } = require('./prepare')
 const assert = require('assert')
 const { base, example } = require('feathers-service-tests-cassandra')
+const adapterTests = require('@feathersjs/adapter-tests')
 const errors = require('@feathersjs/errors')
 const sleep = require('await-sleep')
 const server = require('../example/app')
@@ -31,25 +32,66 @@ const ERROR_CODES = {
   unprepared: 0x2500
 }
 
-let app = null
-let models = null
-let types = null
-let people = null
-let peopleMv = null
-let peopleRooms = null
-let peopleRoomsCustomIdSeparator = null
+const testSuite = adapterTests([
+  '.options',
+  '.events',
+  '._get',
+  '._find',
+  '._create',
+  '._update',
+  '._patch',
+  '._remove',
+  '.get',
+  '.get + $select',
+  '.get + id + query',
+  '.get + NotFound',
+  '.find',
+  '.remove',
+  '.remove + $select',
+  '.remove + id + query',
+  '.update',
+  '.update + $select',
+  '.update + id + query',
+  '.update + NotFound',
+  '.patch',
+  '.patch + $select',
+  '.create',
+  '.create + $select',
+  '.create multi',
+  'internal .find',
+  'internal .get',
+  'internal .create',
+  'internal .update',
+  'internal .patch',
+  'internal .remove',
+  '.find + equal',
+  '.find + equal multiple',
+  '.find + $limit',
+  '.find + $limit 0',
+  '.find + $select',
+  '.find + $lt',
+  '.find + $lte',
+  '.find + $gt',
+  '.find + $gte'
+])
 
 describe('Feathers Cassandra service', () => {
+  let models = null
+  let types = null
+  let people = null
+  let peopleMv = null
+  let peopleRooms = null
+  let peopleRoomsCustomIdSeparator = null
+
   before(async () => {
     await prepare()
 
-    app = refs.app()
     models = app.get('models')
     types = models.datatypes
-    people = refs.people()
-    peopleMv = refs.peopleMv()
-    peopleRooms = refs.peopleRooms()
-    peopleRoomsCustomIdSeparator = refs.peopleRoomsCustomIdSeparator()
+    people = app.service('people')
+    peopleRooms = app.service('people-rooms')
+    peopleRoomsCustomIdSeparator = app.service('people-rooms-custom-id-separator')
+    peopleMv = app.service('people-mv')
   })
 
   describe('Initialization', () => {
@@ -2066,14 +2108,17 @@ describe('Feathers Cassandra service', () => {
   })
 })
 
-describe('Common functionality', function () {
+describe('Common Tests', function () {
   this.slow(2000)
 
   it('is CommonJS compatible', () =>
     assert.strictEqual(typeof require('../lib'), 'function'))
 
-  base(refs.app, errors, 'people')
-  base(refs.app, errors, 'people-customid', 'customid')
+  base(app, errors, 'people')
+  base(app, errors, 'people-custom-id', 'custom_id')
+
+  testSuite(app, errors, 'adapter-tests-people', 'id')
+  testSuite(app, errors, 'adapter-tests-people-custom-id', 'custom_id')
 })
 
 describe('Feathers Cassandra service example test', function () {

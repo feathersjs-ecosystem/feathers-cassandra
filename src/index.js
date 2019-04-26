@@ -495,27 +495,28 @@ class Service extends AdapterService {
     }
 
     if (Array.isArray(data)) {
+      const dataCopy = data.map(val => Object.assign({}, val))
       const query = this.filterQuery(params).query
 
       if (query.$batch) {
         const afterHook = this.Model._properties.schema.after_save
         const hookOptions = utils.getHookOptions(query)
 
-        return utils.batch(Service.cassanknex, data.map(current => create(current, params, hookOptions, true)), params)
+        return utils.batch(Service.cassanknex, dataCopy.map(current => create(current, params, hookOptions, true)), params)
           .then(res => {
-            data.forEach(item => {
+            dataCopy.forEach(item => {
               if (afterHook && afterHook(item, hookOptions) === false) { throw new errors.BadRequest('Error in after_save lifecycle function') }
             })
 
-            return data
+            return dataCopy
           })
           .catch(errorHandler)
       }
 
-      return Promise.all(data.map(current => create(current, params)))
+      return Promise.all(dataCopy.map(current => create(current, params)))
     }
 
-    return create(data, params)
+    return create(Object.assign({}, data), params)
   }
 
   /**

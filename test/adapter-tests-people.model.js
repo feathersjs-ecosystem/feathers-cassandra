@@ -1,15 +1,14 @@
 module.exports = function (app) {
   const models = app.get('models')
-  const PeopleCustomidModel = models.loadSchema('PeopleCustomid', {
-    table_name: 'people_customid',
+  const AdapterTestsPeopleModel = models.loadSchema('AdapterTestsPeople', {
+    table_name: 'adapter_tests_people',
     fields: {
-      customid: 'int',
+      id: 'text',
       name: 'text',
       age: 'int',
-      time: 'int',
       created: 'boolean'
     },
-    key: ['customid'],
+    key: ['id'],
     custom_indexes: [
       {
         on: 'age',
@@ -29,20 +28,19 @@ module.exports = function (app) {
         on: 'created',
         using: 'org.apache.cassandra.index.sasi.SASIIndex',
         options: {}
-      },
-      {
-        on: 'time',
-        using: 'org.apache.cassandra.index.sasi.SASIIndex',
-        options: {}
       }
-    ]
+    ],
+    before_save: function (instance, options) {
+      instance.id = models.uuid().toString()
+      return true
+    }
   }, function (err) {
     if (err) throw err
   })
 
-  PeopleCustomidModel.syncDB(function (err) {
+  AdapterTestsPeopleModel.syncDB(function (err) {
     if (err) throw err
   })
 
-  return PeopleCustomidModel
+  return AdapterTestsPeopleModel
 }
