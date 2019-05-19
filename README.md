@@ -52,14 +52,7 @@ Starting at version 2.0.0 `feathers-cassandra` converts queries securely. If you
 '$gt',
 '$lte',
 '$lt',
-'$in',
-'$nin',
-'$like',
-'$notLike',
-'$iLike',
-'$notILike',
-'$or',
-'$and'
+'$in'
 ```
 
 ### Supported Operators
