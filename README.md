@@ -46,13 +46,13 @@ the benefits of the Express-Cassandra ORM.
 Starting at version 2.0.0 `feathers-cassandra` converts queries securely. If you want to support additional Cassandra operators, the `whitelist` service option can contain an array of additional allowed operators. By default, supported operators are:
  
 ```
-'$eq',
-'$ne',
-'$gte',
-'$gt',
-'$lte',
-'$lt',
-'$in'
+$eq
+$ne
+$gte
+$gt
+$lte
+$lt
+$in
 ```
 
 ### Supported Operators
