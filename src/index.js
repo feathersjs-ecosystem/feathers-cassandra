@@ -203,14 +203,12 @@ class Service extends AdapterService {
 
         if (method === METHODS['$or']) { throw new errors.BadRequest(`\`$or\` is not supported`) }
 
-        if (value === 'null') { value = null }
+        if (method === METHODS['$if'] && value === 'null') { value = null }
 
         return query[method].call(query, column, operator, value) // eslint-disable-line no-useless-call
       }
 
       if (operator === 'NOT IN') { throw new errors.BadRequest(`\`$nin\` is not supported`) }
-
-      if (value === 'null') { value = null }
 
       return query.where(column, operator, value)
     })
