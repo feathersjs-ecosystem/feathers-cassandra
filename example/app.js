@@ -1,7 +1,7 @@
 const feathers = require('@feathersjs/feathers')
 const express = require('@feathersjs/express')
 const rest = require('@feathersjs/express/rest')
-const errorHandler = require('@feathersjs/express/errors');
+const { errorHandler } = require('@feathersjs/express')
 const bodyParser = require('body-parser')
 const cassandra = require('./cassandra')
 const services = require('./services')
