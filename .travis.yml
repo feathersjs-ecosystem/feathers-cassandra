@@ -3,6 +3,7 @@ language: node_js
 node_js:
   - 'node'
   - '8'
+sudo: required
 services:
   - cassandra
 after_success: npm run coverage
