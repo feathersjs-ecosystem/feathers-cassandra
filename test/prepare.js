@@ -52,7 +52,7 @@ const prepare = async () => {
       })
     }
 
-    return sleep(5000).then(() => { // wait for keyspace to be created by the Todos example app
+    sleep(5000).then(() => { // wait for keyspace to be created by the Todos example app
       const ExpressCassandra = require('express-cassandra')
       const models = ExpressCassandra.createClient({
         clientOptions: {
