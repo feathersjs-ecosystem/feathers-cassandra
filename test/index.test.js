@@ -418,7 +418,7 @@ describe('Feathers Cassandra service', () => {
       }).catch(function (error) {
         expect(error).to.be.ok
         expect(error instanceof errors.BadRequest).to.be.ok
-        expect(error.message).to.equal(`You can not replace multiple instances. Did you mean 'patch'?`)
+        expect(error.message).to.equal('You can not replace multiple instances. Did you mean \'patch\'?')
       })
     })
 

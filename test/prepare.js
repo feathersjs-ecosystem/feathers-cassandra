@@ -28,7 +28,7 @@ const truncateTables = async cassanknex => {
 }
 
 const prepare = async () => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     function knex (app) {
       const cassandraClient = app.get('models').orm.get_system_client()
 
@@ -52,30 +52,30 @@ const prepare = async () => {
       })
     }
 
-    await sleep(5000) // wait for keyspace to be created by the Todos example app
-
-    const ExpressCassandra = require('express-cassandra')
-    const models = ExpressCassandra.createClient({
-      clientOptions: {
-        contactPoints: ['127.0.0.1'],
-        protocolOptions: { port: 9042 },
-        keyspace: KEYSPACE,
-        queryOptions: { consistency: ExpressCassandra.consistencies.one }
-      },
-      ormOptions: {
-        defaultReplicationStrategy: {
-          'class': 'SimpleStrategy',
-          'replication_factor': 1
+    return sleep(5000).then(() => { // wait for keyspace to be created by the Todos example app
+      const ExpressCassandra = require('express-cassandra')
+      const models = ExpressCassandra.createClient({
+        clientOptions: {
+          contactPoints: ['127.0.0.1'],
+          protocolOptions: { port: 9042 },
+          keyspace: KEYSPACE,
+          queryOptions: { consistency: ExpressCassandra.consistencies.one }
         },
-        migration: 'alter',
-        createKeyspace: false
-      }
-    })
+        ormOptions: {
+          defaultReplicationStrategy: {
+            class: 'SimpleStrategy',
+            replication_factor: 1
+          },
+          migration: 'alter',
+          createKeyspace: false
+        }
+      })
 
-    app = feathers()
-      .set('models', models)
-      .configure(knex)
-      .configure(services)
+      app = feathers()
+        .set('models', models)
+        .configure(knex)
+        .configure(services)
+    })
   })
 }
 

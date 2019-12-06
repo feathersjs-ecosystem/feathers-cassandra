@@ -69,7 +69,7 @@ class Service extends AdapterService {
       throw new errors.GeneralError('You must provide an ExpressCassandra Model')
     }
 
-    let id = flatten(options.model._properties.schema.key)
+    const id = flatten(options.model._properties.schema.key)
 
     const whitelist = Object.values(OPERATORS).concat(options.whitelist || [])
 
@@ -201,14 +201,14 @@ class Service extends AdapterService {
           return query.tokenWhere(params.$keys, OPERATORS_MAP[Object.keys(params.$condition)[0]], params.$condition[Object.keys(params.$condition)[0]])
         }
 
-        if (method === METHODS['$or']) { throw new errors.BadRequest(`\`$or\` is not supported`) }
+        if (method === METHODS.$or) { throw new errors.BadRequest('`$or` is not supported') }
 
-        if (method === METHODS['$if'] && value === 'null') { value = null }
+        if (method === METHODS.$if && value === 'null') { value = null }
 
         return query[method].call(query, column, operator, value) // eslint-disable-line no-useless-call
       }
 
-      if (operator === 'NOT IN') { throw new errors.BadRequest(`\`$nin\` is not supported`) }
+      if (operator === 'NOT IN') { throw new errors.BadRequest('`$nin` is not supported') }
 
       return query.where(column, operator, value)
     })
@@ -383,7 +383,7 @@ class Service extends AdapterService {
       }
 
       if (count) {
-        let countQuery = this._createQuery()
+        const countQuery = this._createQuery()
           .select()
           .count('*')
 
@@ -446,7 +446,7 @@ class Service extends AdapterService {
 
       if (beforeHook && beforeHook(data, hookOptions) === false) { throw new errors.BadRequest('Error in before_save lifecycle function') }
 
-      let q = this._createQuery('create')
+      const q = this._createQuery('create')
 
       if (params.query) {
         if (params.query.$ifNotExists) {
@@ -672,7 +672,7 @@ class Service extends AdapterService {
       }
     }
 
-    let q = this._createQuery('update')
+    const q = this._createQuery('update')
 
     if (params.query) {
       if (!isNaN(params.query.$ttl)) {

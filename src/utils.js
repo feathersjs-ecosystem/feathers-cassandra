@@ -105,7 +105,7 @@ exports.prepareIfCondition = (id, query, idKey) => {
 }
 
 exports.getMaterializedView = (query, materializedViews) => {
-  let keys = Object.keys(query)
+  const keys = Object.keys(query)
 
   if (materializedViews.length > 0 && keys.length > 0) {
     for (const mv of materializedViews) {
