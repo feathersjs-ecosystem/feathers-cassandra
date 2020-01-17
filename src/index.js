@@ -306,11 +306,19 @@ class Service extends AdapterService {
             } else {
               valueToValidate = types.TimeUuid.fromString(valueToValidate.toString())
             }
+
+            if (valueToValidate instanceof types.TimeUuid) { // workaround for issue with express-cassandra validator when fromString is used
+              continue
+            }
           } else if (fieldType === 'uuid') {
             if (valueToValidate instanceof types.Uuid || valueToValidate.constructor.name === 'Uuid' || Buffer.isBuffer(valueToValidate)) {
               data[field] = valueToValidate.toString()
             } else {
               valueToValidate = types.Uuid.fromString(valueToValidate.toString())
+            }
+
+            if (valueToValidate instanceof types.Uuid) { // workaround for issue with express-cassandra validator when fromString is used
+              continue
             }
           }
         }
