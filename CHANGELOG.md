@@ -1,5 +1,9 @@
 # Changelog
 
+## [v3.4.1](https://github.com/dekelev/feathers-cassandra/tree/v3.4.1) (2020-02-01)
+
+[Full Changelog](https://github.com/dekelev/feathers-cassandra/compare/v3.4.0...v3.4.1)
+
 ## [v3.4.0](https://github.com/dekelev/feathers-cassandra/tree/v3.4.0) (2020-02-01)
 
 [Full Changelog](https://github.com/dekelev/feathers-cassandra/compare/v3.3.2...v3.4.0)
