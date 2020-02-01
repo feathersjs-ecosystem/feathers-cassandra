@@ -1,9 +1,9 @@
-const { AdapterService } = require('@feathersjs/adapter-commons')
-const errors = require('@feathersjs/errors')
-const types = require('cassandra-driver').types
-const flatten = require('arr-flatten')
-const utils = require('./utils')
-const errorHandler = require('./error-handler')
+const { AdapterService } = require('@feathersjs/adapter-commons');
+const errors = require('@feathersjs/errors');
+const types = require('cassandra-driver').types;
+const flatten = require('arr-flatten');
+const utils = require('./utils');
+const errorHandler = require('./error-handler');
 
 const METHODS = {
   $or: 'orWhere', // not supported
@@ -18,7 +18,7 @@ const METHODS = {
   $remove: 'remove',
   $increment: 'increment',
   $decrement: 'decrement'
-}
+};
 
 const OPERATORS = {
   eq: '$eq',
@@ -35,7 +35,7 @@ const OPERATORS = {
   notILike: '$notILike', // not supported
   or: '$or', // not supported
   and: '$and'
-}
+};
 
 const OPERATORS_MAP = {
   $eq: '=',
@@ -53,7 +53,7 @@ const OPERATORS_MAP = {
   $notILike: 'NOT ILIKE', // not supported
   $contains: 'CONTAINS', // applicable for indexed collections only
   $containsKey: 'CONTAINS KEY' // applicable for indexed maps only
-}
+};
 
 /**
  * Class representing a feathers adapter for ExpressCassandra ORM & CassanKnex query builder.
@@ -66,61 +66,61 @@ const OPERATORS_MAP = {
 class Service extends AdapterService {
   constructor (options) {
     if (!options.model) {
-      throw new errors.GeneralError('You must provide an ExpressCassandra Model')
+      throw new errors.GeneralError('You must provide an ExpressCassandra Model');
     }
 
-    const id = flatten(options.model._properties.schema.key)
+    const id = flatten(options.model._properties.schema.key);
 
-    const whitelist = Object.values(OPERATORS).concat(options.whitelist || [])
+    const whitelist = Object.values(OPERATORS).concat(options.whitelist || []);
 
     super(Object.assign({
       id: id.length === 1 ? id[0] : id,
       whitelist
-    }, options))
+    }, options));
 
-    this.idSeparator = options.idSeparator || ','
-    this.keyspace = options.model.get_keyspace_name()
-    this.tableName = options.model.get_table_name()
-    this.materializedViews = options.materializedViews || []
-    this.modelOptions = options.model._properties.schema.options || {}
-    this.fields = options.model._properties.schema.fields
-    this.filters = options.model._properties.schema.filters || {}
+    this.idSeparator = options.idSeparator || ',';
+    this.keyspace = options.model.get_keyspace_name();
+    this.tableName = options.model.get_table_name();
+    this.materializedViews = options.materializedViews || [];
+    this.modelOptions = options.model._properties.schema.options || {};
+    this.fields = options.model._properties.schema.fields;
+    this.filters = options.model._properties.schema.filters || {};
   }
 
   get Model () {
-    return this.options.model
+    return this.options.model;
   }
 
   getModel (params) {
-    return this.options.model
+    return this.options.model;
   }
 
   filterQuery (params) {
     const filter = query => {
       Object.keys(query).forEach(key => {
-        const value = query[key]
+        const value = query[key];
 
         if (key[0] !== '$' && this.fields[key] && utils.getFieldType(this.fields[key]) === 'boolean' && typeof value === 'string') {
-          query[key] = (value !== '' && value !== '0' && value !== 'false')
+          query[key] = (value !== '' && value !== '0' && value !== 'false');
         } else if (value instanceof types.Uuid || Buffer.isBuffer(value)) {
-          query[key] = value.toString()
+          query[key] = value.toString();
         } else if (Array.isArray(value)) {
           value.forEach((fieldValue, fieldKey) => {
             if (fieldValue instanceof types.Uuid || Buffer.isBuffer(fieldValue)) {
-              query[key][fieldKey] = fieldValue.toString()
+              query[key][fieldKey] = fieldValue.toString();
             }
-          })
+          });
         } else if (utils.isPlainObject(value)) {
-          return filter(value)
+          return filter(value);
         }
-      })
-    }
+      });
+    };
 
     if (params.query) {
-      filter(params.query)
+      filter(params.query);
     }
 
-    return super.filterQuery(params)
+    return super.filterQuery(params);
   }
 
   /**
@@ -129,35 +129,35 @@ class Service extends AdapterService {
    * @param idList
    */
   getIdsQuery (id, idList) {
-    const query = {}
+    const query = {};
 
     if (Array.isArray(this.id)) {
-      let ids = id
+      let ids = id;
 
       if (id && !Array.isArray(id)) {
-        ids = utils.extractIds(id, this.id, this.idSeparator)
+        ids = utils.extractIds(id, this.id, this.idSeparator);
       }
 
       this.id.forEach((idKey, index) => {
         if (!ids) {
           if (idList) {
             if (idList[index]) {
-              query[idKey] = idList[index].length === 1 ? idList[index] : { $in: idList[index] }
+              query[idKey] = idList[index].length === 1 ? idList[index] : { $in: idList[index] };
             }
           } else {
-            query[idKey] = null
+            query[idKey] = null;
           }
         } else if (ids[index]) {
-          query[idKey] = ids[index]
+          query[idKey] = ids[index];
         } else {
-          throw new errors.BadRequest('When using composite primary key, id must contain values for all primary keys')
+          throw new errors.BadRequest('When using composite primary key, id must contain values for all primary keys');
         }
-      })
+      });
     } else {
-      query[`${this.id}`] = idList ? (idList.length === 1 ? idList[0] : { $in: idList }) : id
+      query[`${this.id}`] = idList ? (idList.length === 1 ? idList[0] : { $in: idList }) : id;
     }
 
-    return query
+    return query;
   }
 
   /**
@@ -168,164 +168,164 @@ class Service extends AdapterService {
    * @param methodKey
    */
   objectify (query, params, parentKey, methodKey) {
-    if (params.$filters) { delete params.$filters }
-    if (params.$allowFiltering) { delete params.$allowFiltering }
-    if (!isNaN(params.$ttl)) { delete params.$ttl }
-    if (params.$timestamp) { delete params.$timestamp }
-    if (params.$noSelect) { delete params.$noSelect }
-    if (params.$limitPerPartition) { delete params.$limitPerPartition }
+    if (params.$filters) { delete params.$filters; }
+    if (params.$allowFiltering) { delete params.$allowFiltering; }
+    if (!isNaN(params.$ttl)) { delete params.$ttl; }
+    if (params.$timestamp) { delete params.$timestamp; }
+    if (params.$noSelect) { delete params.$noSelect; }
+    if (params.$limitPerPartition) { delete params.$limitPerPartition; }
 
     Object.keys(params || {}).forEach(key => {
-      if (parentKey === '$token' && key === '$condition') { return }
+      if (parentKey === '$token' && key === '$condition') { return; }
 
-      let value = params[key]
+      let value = params[key];
 
       if (utils.isPlainObject(value)) {
-        return this.objectify(query, value, key, parentKey)
+        return this.objectify(query, value, key, parentKey);
       }
 
-      const column = parentKey && parentKey[0] !== '$' ? parentKey : key
-      const method = METHODS[methodKey] || METHODS[parentKey] || METHODS[key]
-      const operator = OPERATORS_MAP[key] || '='
+      const column = parentKey && parentKey[0] !== '$' ? parentKey : key;
+      const method = METHODS[methodKey] || METHODS[parentKey] || METHODS[key];
+      const operator = OPERATORS_MAP[key] || '=';
 
       if (method) {
         if (!methodKey && (key === '$or' || key === '$and')) {
           value.forEach(condition => {
-            this.objectify(query, condition, null, key)
-          })
+            this.objectify(query, condition, null, key);
+          });
 
-          return
+          return;
         }
 
         if (parentKey === '$token') {
-          return query.tokenWhere(params.$keys, OPERATORS_MAP[Object.keys(params.$condition)[0]], params.$condition[Object.keys(params.$condition)[0]])
+          return query.tokenWhere(params.$keys, OPERATORS_MAP[Object.keys(params.$condition)[0]], params.$condition[Object.keys(params.$condition)[0]]);
         }
 
-        if (method === METHODS.$or) { throw new errors.BadRequest('`$or` is not supported') }
+        if (method === METHODS.$or) { throw new errors.BadRequest('`$or` is not supported'); }
 
-        if (method === METHODS.$if && value === 'null') { value = null }
+        if (method === METHODS.$if && value === 'null') { value = null; }
 
-        return query[method].call(query, column, operator, value) // eslint-disable-line no-useless-call
+        return query[method].call(query, column, operator, value); // eslint-disable-line no-useless-call
       }
 
-      if (operator === 'NOT IN') { throw new errors.BadRequest('`$nin` is not supported') }
+      if (operator === 'NOT IN') { throw new errors.BadRequest('`$nin` is not supported'); }
 
-      return query.where(column, operator, value)
-    })
+      return query.where(column, operator, value);
+    });
   }
 
   _createQuery (type) {
-    let q = null
+    let q = null;
 
     if (!Service.cassanknex) {
-      throw new errors.GeneralError('You must bind FeathersCassandra with an initialized CassanKnex object')
+      throw new errors.GeneralError('You must bind FeathersCassandra with an initialized CassanKnex object');
     }
 
-    if (!type) { q = Service.cassanknex(this.keyspace).from(this.tableName) }
-    if (type === 'create') { q = Service.cassanknex(this.keyspace).into(this.tableName) }
-    if (type === 'update') { q = Service.cassanknex(this.keyspace).update(this.tableName) }
-    if (type === 'delete') { q = Service.cassanknex(this.keyspace).delete().from(this.tableName) }
+    if (!type) { q = Service.cassanknex(this.keyspace).from(this.tableName); }
+    if (type === 'create') { q = Service.cassanknex(this.keyspace).into(this.tableName); }
+    if (type === 'update') { q = Service.cassanknex(this.keyspace).update(this.tableName); }
+    if (type === 'delete') { q = Service.cassanknex(this.keyspace).delete().from(this.tableName); }
 
-    return q
+    return q;
   }
 
   createQuery (filters, query) {
-    let q = this._createQuery()
+    let q = this._createQuery();
 
     // $select uses a specific find syntax, so it has to come first.
     if (filters.$select) {
-      const fieldsToRemove = []
+      const fieldsToRemove = [];
 
       for (const field of filters.$select) {
-        const match = field && field.match(/(ttl|writetime|dateOf|unixTimestampOf|toDate|toTimestamp|toUnixTimestamp)\((.+)\)/)
+        const match = field && field.match(/(ttl|writetime|dateOf|unixTimestampOf|toDate|toTimestamp|toUnixTimestamp)\((.+)\)/);
         if (match) {
-          const fieldMethod = match[1]
-          const fieldName = match[2]
+          const fieldMethod = match[1];
+          const fieldName = match[2];
 
-          q[fieldMethod]({ [fieldName]: `${fieldMethod}(${fieldName})` })
-          fieldsToRemove.push(field)
+          q[fieldMethod]({ [fieldName]: `${fieldMethod}(${fieldName})` });
+          fieldsToRemove.push(field);
         }
       }
 
-      filters.$select = filters.$select.filter(val => !fieldsToRemove.includes(val))
+      filters.$select = filters.$select.filter(val => !fieldsToRemove.includes(val));
 
-      q = q.select(...filters.$select.concat(this.id))
+      q = q.select(...filters.$select.concat(this.id));
     } else {
-      q = q.select()
+      q = q.select();
     }
 
-    this.objectify(q, query)
+    this.objectify(q, query);
 
     if (filters.$sort) {
       Object.keys(filters.$sort).forEach(key => {
-        q = q.orderBy(key, filters.$sort[key] === 1 ? 'asc' : 'desc')
-      })
+        q = q.orderBy(key, filters.$sort[key] === 1 ? 'asc' : 'desc');
+      });
     }
 
-    return q
+    return q;
   }
 
   validate (data, type) {
-    const model = new this.Model()
-    const fields = type === 'patch' ? Object.keys(data) : Object.keys(this.fields)
+    const model = new this.Model();
+    const fields = type === 'patch' ? Object.keys(data) : Object.keys(this.fields);
 
     if (type === 'update') {
       if (Array.isArray(this.id)) {
         for (const idKey of this.id) {
-          fields.splice(fields.indexOf(idKey), 1)
+          fields.splice(fields.indexOf(idKey), 1);
         }
       } else {
-        fields.splice(fields.indexOf(this.id), 1)
+        fields.splice(fields.indexOf(this.id), 1);
       }
     }
 
     for (const field of fields) {
-      let value = data[field]
-      const fieldRule = utils.getFieldRule(this.fields[field])
-      const fieldType = utils.getFieldType(this.fields[field])
+      let value = data[field];
+      const fieldRule = utils.getFieldRule(this.fields[field]);
+      const fieldType = utils.getFieldType(this.fields[field]);
 
       if (value === undefined || value === null) {
-        if (fieldRule && fieldRule.required) { throw new errors.BadRequest(`\`${field}\` field is required`) }
+        if (fieldRule && fieldRule.required) { throw new errors.BadRequest(`\`${field}\` field is required`); }
       }
 
-      let methodKey = null
+      let methodKey = null;
 
       if (value && utils.isPlainObject(value) && METHODS[Object.keys(value)[0]]) {
-        methodKey = Object.keys(value)[0]
+        methodKey = Object.keys(value)[0];
       }
 
       if (!methodKey || methodKey !== '$remove' || fieldType !== 'map') {
-        if (methodKey === '$increment' || methodKey === '$decrement') { value = Number(value) }
+        if (methodKey === '$increment' || methodKey === '$decrement') { value = Number(value); }
 
-        let valueToValidate = methodKey ? value[methodKey] : value
+        let valueToValidate = methodKey ? value[methodKey] : value;
 
         if (valueToValidate) {
           if (fieldType === 'timeuuid') {
             if (valueToValidate instanceof types.TimeUuid || valueToValidate.constructor.name === 'TimeUuid' || Buffer.isBuffer(valueToValidate)) {
-              data[field] = valueToValidate.toString()
+              data[field] = valueToValidate.toString();
             } else {
-              valueToValidate = types.TimeUuid.fromString(valueToValidate.toString())
+              valueToValidate = types.TimeUuid.fromString(valueToValidate.toString());
             }
 
             if (valueToValidate instanceof types.TimeUuid) { // workaround for issue with express-cassandra validator when fromString is used
-              continue
+              continue;
             }
           } else if (fieldType === 'uuid') {
             if (valueToValidate instanceof types.Uuid || valueToValidate.constructor.name === 'Uuid' || Buffer.isBuffer(valueToValidate)) {
-              data[field] = valueToValidate.toString()
+              data[field] = valueToValidate.toString();
             } else {
-              valueToValidate = types.Uuid.fromString(valueToValidate.toString())
+              valueToValidate = types.Uuid.fromString(valueToValidate.toString());
             }
 
             if (valueToValidate instanceof types.Uuid) { // workaround for issue with express-cassandra validator when fromString is used
-              continue
+              continue;
             }
           }
         }
 
-        const validated = model.validate(field, valueToValidate)
+        const validated = model.validate(field, valueToValidate);
 
-        if (validated !== true) { throw new errors.BadRequest(validated(valueToValidate, field, fieldType)) }
+        if (validated !== true) { throw new errors.BadRequest(validated(valueToValidate, field, fieldType)); }
       }
     }
   }
@@ -336,37 +336,37 @@ class Service extends AdapterService {
    */
   _find (params) {
     const find = (params, count, filters, query) => {
-      let allowFiltering = false
-      let filtersQueue = null
-      const materializedView = utils.getMaterializedView(query, this.materializedViews)
-      const q = this.createQuery(filters, query)
+      let allowFiltering = false;
+      let filtersQueue = null;
+      const materializedView = utils.getMaterializedView(query, this.materializedViews);
+      const q = this.createQuery(filters, query);
 
-      if (materializedView) { q.from(materializedView) }
+      if (materializedView) { q.from(materializedView); }
 
       if (params.query) {
         if (params.query.$allowFiltering) {
-          allowFiltering = true
-          q.allowFiltering()
-          delete params.query.$allowFiltering
+          allowFiltering = true;
+          q.allowFiltering();
+          delete params.query.$allowFiltering;
         }
 
         if (params.query.$filters) {
-          filtersQueue = utils.runFilters(params, q, params.query.$filters, this.filters)
-          delete params.query.$filters
+          filtersQueue = utils.runFilters(params, q, params.query.$filters, this.filters);
+          delete params.query.$filters;
         }
 
         if (params.query.$limitPerPartition) {
-          q.limitPerPartition(params.query.$limitPerPartition)
-          delete params.query.$limitPerPartition
+          q.limitPerPartition(params.query.$limitPerPartition);
+          delete params.query.$limitPerPartition;
         }
       }
 
       if (filters.$limit) {
-        q.limit(filters.$limit)
+        q.limit(filters.$limit);
       }
 
       let executeQuery = res => {
-        const total = res ? Number(res.rows[0].count) : undefined
+        const total = res ? Number(res.rows[0].count) : undefined;
 
         return utils.exec(q, params)
           .then(res => {
@@ -374,68 +374,68 @@ class Service extends AdapterService {
               total,
               limit: filters.$limit,
               data: res.rows
-            }
-          })
-      }
+            };
+          });
+      };
 
       if (filters.$limit === 0) {
         executeQuery = res => {
-          const total = res ? Number(res.rows[0].count) : undefined
+          const total = res ? Number(res.rows[0].count) : undefined;
 
           return Promise.resolve({
             total,
             limit: filters.$limit,
             data: []
-          })
-        }
+          });
+        };
       }
 
       if (count) {
         const countQuery = this._createQuery()
           .select()
-          .count('*')
+          .count('*');
 
-        if (allowFiltering) { countQuery.allowFiltering() }
+        if (allowFiltering) { countQuery.allowFiltering(); }
 
         if (filtersQueue) {
-          for (const filter of filtersQueue) { filter(countQuery) }
+          for (const filter of filtersQueue) { filter(countQuery); }
         }
 
-        this.objectify(countQuery, query)
+        this.objectify(countQuery, query);
 
         return utils.exec(countQuery, params)
           .then(res => {
-            return executeQuery(res)
+            return executeQuery(res);
           })
-          .catch(errorHandler)
+          .catch(errorHandler);
       }
 
-      return executeQuery().catch(errorHandler)
-    }
+      return executeQuery().catch(errorHandler);
+    };
 
-    const { filters, query, paginate } = this.filterQuery(params)
-    const result = find(params, Boolean(paginate && paginate.default), filters, query)
+    const { filters, query, paginate } = this.filterQuery(params);
+    const result = find(params, Boolean(paginate && paginate.default), filters, query);
 
     if (!paginate || !paginate.default) {
-      return result.then(page => page.data || page)
+      return result.then(page => page.data || page);
     }
 
-    return result
+    return result;
   }
 
   _get (id, params) {
-    const query = Object.assign({}, params.query, this.getIdsQuery(id))
+    const query = Object.assign({}, params.query, this.getIdsQuery(id));
 
     return this._find(Object.assign({}, params, { query }))
       .then(page => {
-        const data = page.data || page
+        const data = page.data || page;
 
         if (data.length !== 1) {
-          throw new errors.NotFound(`No record found for id '${id}'`)
+          throw new errors.NotFound(`No record found for id '${id}'`);
         }
 
-        return data[0]
-      })
+        return data[0];
+      });
   }
 
   /**
@@ -445,84 +445,84 @@ class Service extends AdapterService {
    */
   _create (data, params) {
     const create = (data, params, hookOptions, batch = false) => {
-      this.validate(data)
-      utils.setTimestampFields(data, true, true, this.modelOptions.timestamps)
-      utils.setVersionField(data, this.modelOptions.versions)
+      this.validate(data);
+      utils.setTimestampFields(data, true, true, this.modelOptions.timestamps);
+      utils.setVersionField(data, this.modelOptions.versions);
 
-      const beforeHook = this.Model._properties.schema.before_save
-      const afterHook = this.Model._properties.schema.after_save
+      const beforeHook = this.Model._properties.schema.before_save;
+      const afterHook = this.Model._properties.schema.after_save;
 
-      if (beforeHook && beforeHook(data, hookOptions) === false) { throw new errors.BadRequest('Error in before_save lifecycle function') }
+      if (beforeHook && beforeHook(data, hookOptions) === false) { throw new errors.BadRequest('Error in before_save lifecycle function'); }
 
-      const q = this._createQuery('create')
+      const q = this._createQuery('create');
 
       if (params.query) {
         if (params.query.$ifNotExists) {
-          q.ifNotExists()
-          delete params.query.$ifNotExists
+          q.ifNotExists();
+          delete params.query.$ifNotExists;
         }
 
         if (!isNaN(params.query.$ttl)) {
-          q.usingTTL(Number(params.query.$ttl))
-          delete params.query.$ttl
+          q.usingTTL(Number(params.query.$ttl));
+          delete params.query.$ttl;
         }
 
         if (params.query.$timestamp) {
-          q.usingTimestamp(params.query.$timestamp)
-          delete params.query.$timestamp
+          q.usingTimestamp(params.query.$timestamp);
+          delete params.query.$timestamp;
         }
       }
 
       if (batch) {
-        return q.insert(data)
+        return q.insert(data);
       }
 
       return utils.exec(q.insert(data), params)
         .then(row => {
-          if (afterHook && afterHook(data, hookOptions) === false) { throw new errors.BadRequest('Error in after_save lifecycle function') }
+          if (afterHook && afterHook(data, hookOptions) === false) { throw new errors.BadRequest('Error in after_save lifecycle function'); }
 
-          if (params.query && params.query.$noSelect) { return data }
+          if (params.query && params.query.$noSelect) { return data; }
 
-          let id = null
+          let id = null;
 
           if (Array.isArray(this.id)) {
-            id = []
+            id = [];
 
             for (const idKey of this.id) {
-              id.push(typeof data[idKey] !== 'undefined' ? data[idKey] : row[idKey])
+              id.push(typeof data[idKey] !== 'undefined' ? data[idKey] : row[idKey]);
             }
           } else {
-            id = typeof data[this.id] !== 'undefined' ? data[this.id] : row[this.id]
+            id = typeof data[this.id] !== 'undefined' ? data[this.id] : row[this.id];
           }
 
-          return this._get(id, params)
+          return this._get(id, params);
         })
-        .catch(errorHandler)
-    }
+        .catch(errorHandler);
+    };
 
     if (Array.isArray(data)) {
-      const dataCopy = data.map(val => Object.assign({}, val))
-      const query = this.filterQuery(params).query
+      const dataCopy = data.map(val => Object.assign({}, val));
+      const query = this.filterQuery(params).query;
 
       if (query.$batch) {
-        const afterHook = this.Model._properties.schema.after_save
-        const hookOptions = utils.getHookOptions(query)
+        const afterHook = this.Model._properties.schema.after_save;
+        const hookOptions = utils.getHookOptions(query);
 
         return utils.batch(Service.cassanknex, dataCopy.map(current => create(current, params, hookOptions, true)), params)
           .then(res => {
             dataCopy.forEach(item => {
-              if (afterHook && afterHook(item, hookOptions) === false) { throw new errors.BadRequest('Error in after_save lifecycle function') }
-            })
+              if (afterHook && afterHook(item, hookOptions) === false) { throw new errors.BadRequest('Error in after_save lifecycle function'); }
+            });
 
-            return dataCopy
+            return dataCopy;
           })
-          .catch(errorHandler)
+          .catch(errorHandler);
       }
 
-      return Promise.all(dataCopy.map(current => create(current, params)))
+      return Promise.all(dataCopy.map(current => create(current, params)));
     }
 
-    return create(Object.assign({}, data), params)
+    return create(Object.assign({}, data), params);
   }
 
   /**
@@ -533,113 +533,113 @@ class Service extends AdapterService {
    */
   _update (id, data, params) {
     const update = (id, data, params, oldData) => {
-      const fields = Object.keys(oldData || this.fields)
-      const createdAtField = this.modelOptions.timestamps && this.modelOptions.timestamps.createdAt
-      let newObject = {}
+      const fields = Object.keys(oldData || this.fields);
+      const createdAtField = this.modelOptions.timestamps && this.modelOptions.timestamps.createdAt;
+      let newObject = {};
 
       // Set missing fields to null
       for (const key of fields) {
         if (data[key] === undefined) {
           if (!createdAtField || key !== createdAtField) {
-            newObject[key] = null
+            newObject[key] = null;
           }
         } else {
-          newObject[key] = data[key]
+          newObject[key] = data[key];
         }
       }
 
       // Delete id field so we don't update it
       if (Array.isArray(this.id)) {
         for (const idKey of this.id) {
-          delete newObject[idKey]
+          delete newObject[idKey];
         }
       } else {
-        delete newObject[this.id]
+        delete newObject[this.id];
       }
 
-      const q = this._createQuery('update')
-      const idsQuery = this.getIdsQuery(id)
+      const q = this._createQuery('update');
+      const idsQuery = this.getIdsQuery(id);
 
       if (params.query && !isNaN(params.query.$ttl)) {
-        q.usingTTL(Number(params.query.$ttl))
-        delete params.query.$ttl
+        q.usingTTL(Number(params.query.$ttl));
+        delete params.query.$ttl;
       }
 
       if (params.query && params.query.$timestamp) {
-        q.usingTimestamp(params.query.$timestamp)
-        delete params.query.$timestamp
+        q.usingTimestamp(params.query.$timestamp);
+        delete params.query.$timestamp;
       }
 
-      utils.prepareData(q, newObject, METHODS)
+      utils.prepareData(q, newObject, METHODS);
 
-      q.set(newObject)
+      q.set(newObject);
 
       Object.keys(idsQuery).forEach(key => {
-        q.where(key, '=', idsQuery[key])
-      })
+        q.where(key, '=', idsQuery[key]);
+      });
 
       if (!oldData) {
-        const query = this.filterQuery(params).query
-        utils.prepareIfCondition(id, query, this.id)
-        this.objectify(q, query)
+        const query = this.filterQuery(params).query;
+        utils.prepareIfCondition(id, query, this.id);
+        this.objectify(q, query);
       }
 
       return utils.exec(q, params)
         .then(() => {
           // Restore the createdAt field so we can return it to the client
-          if (createdAtField && !newObject[createdAtField] && oldData) { newObject[createdAtField] = oldData[createdAtField] }
+          if (createdAtField && !newObject[createdAtField] && oldData) { newObject[createdAtField] = oldData[createdAtField]; }
 
           // Restore the id field so we can return it to the client
           if (Array.isArray(this.id)) {
-            newObject = Object.assign({}, newObject, this.getIdsQuery(id))
+            newObject = Object.assign({}, newObject, this.getIdsQuery(id));
           } else {
-            newObject[this.id] = id
+            newObject[this.id] = id;
           }
 
           if (oldData) {
-            utils.prepareUpdateResult(data, oldData, newObject, this.fields)
+            utils.prepareUpdateResult(data, oldData, newObject, this.fields);
           }
 
           if (params.query && params.query.$select) {
-            const selectedFields = {}
-            for (const field of params.query.$select) { selectedFields[field] = newObject[field] }
+            const selectedFields = {};
+            for (const field of params.query.$select) { selectedFields[field] = newObject[field]; }
 
-            return selectedFields
+            return selectedFields;
           }
 
-          return newObject
+          return newObject;
         })
-        .catch(errorHandler)
-    }
+        .catch(errorHandler);
+    };
 
-    this.validate(data, 'update')
-    utils.setTimestampFields(data, true, false, this.modelOptions.timestamps)
-    utils.setVersionField(data, this.modelOptions.versions)
+    this.validate(data, 'update');
+    utils.setTimestampFields(data, true, false, this.modelOptions.timestamps);
+    utils.setVersionField(data, this.modelOptions.versions);
 
-    const beforeHook = this.Model._properties.schema.before_update
-    const afterHook = this.Model._properties.schema.after_update
-    const hookOptions = utils.getHookOptions(params.query)
+    const beforeHook = this.Model._properties.schema.before_update;
+    const afterHook = this.Model._properties.schema.after_update;
+    const hookOptions = utils.getHookOptions(params.query);
 
-    if (beforeHook && beforeHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in before_update lifecycle function') }
+    if (beforeHook && beforeHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in before_update lifecycle function'); }
 
     if (params.query && params.query.$noSelect) {
-      delete params.query.$noSelect
+      delete params.query.$noSelect;
 
       return update(id, data, params)
         .then(data => {
-          if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function') }
-          return data
-        })
+          if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function'); }
+          return data;
+        });
     }
 
     return this._get(id, params)
       .then(oldData => {
         return update(id, data, params, oldData)
           .then(data => {
-            if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function') }
-            return data
-          })
-      })
+            if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function'); }
+            return data;
+          });
+      });
   }
 
   /**
@@ -649,96 +649,96 @@ class Service extends AdapterService {
    * @param params
    */
   _patch (id, data, params) {
-    this.validate(data, 'patch')
-    utils.setTimestampFields(data, true, false, this.modelOptions.timestamps)
-    utils.setVersionField(data, this.modelOptions.versions)
+    this.validate(data, 'patch');
+    utils.setTimestampFields(data, true, false, this.modelOptions.timestamps);
+    utils.setVersionField(data, this.modelOptions.versions);
 
-    const beforeHook = this.Model._properties.schema.before_update
-    const afterHook = this.Model._properties.schema.after_update
-    const hookOptions = utils.getHookOptions(params.query)
+    const beforeHook = this.Model._properties.schema.before_update;
+    const afterHook = this.Model._properties.schema.after_update;
+    const hookOptions = utils.getHookOptions(params.query);
 
-    if (beforeHook && beforeHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in before_update lifecycle function') }
+    if (beforeHook && beforeHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in before_update lifecycle function'); }
 
-    let { filters, query } = this.filterQuery(params)
-    const dataCopy = Object.assign({}, data)
+    let { filters, query } = this.filterQuery(params);
+    const dataCopy = Object.assign({}, data);
 
     const mapIds = page => Array.isArray(this.id)
       ? this.id.map(idKey => [...new Set((page.data || page).map(current => current[idKey]))])
-      : (page.data || page).map(current => current[this.id])
+      : (page.data || page).map(current => current[this.id]);
 
     // By default we will just query for the one id. For multi patch
     // we create a list of the ids of all items that will be changed
     // to re-query them after the update
     const ids =
-      id === null ? this._find(params).then(mapIds) : Promise.resolve([id])
+      id === null ? this._find(params).then(mapIds) : Promise.resolve([id]);
 
     if (id !== null) {
       if (Array.isArray(this.id)) {
-        query = Object.assign({}, query, this.getIdsQuery(id))
+        query = Object.assign({}, query, this.getIdsQuery(id));
       } else {
-        query[this.id] = id
+        query[this.id] = id;
       }
     }
 
-    const q = this._createQuery('update')
+    const q = this._createQuery('update');
 
     if (params.query) {
       if (!isNaN(params.query.$ttl)) {
-        q.usingTTL(Number(params.query.$ttl))
-        delete params.query.$ttl
+        q.usingTTL(Number(params.query.$ttl));
+        delete params.query.$ttl;
       }
 
       if (params.query.$timestamp) {
-        q.usingTimestamp(params.query.$timestamp)
-        delete params.query.$timestamp
+        q.usingTimestamp(params.query.$timestamp);
+        delete params.query.$timestamp;
       }
     }
 
-    utils.prepareIfCondition(id, query, this.id)
-    this.objectify(q, query)
+    utils.prepareIfCondition(id, query, this.id);
+    this.objectify(q, query);
 
     if (Array.isArray(this.id)) {
       for (const idKey of this.id) {
-        delete dataCopy[idKey]
+        delete dataCopy[idKey];
       }
     } else {
-      delete dataCopy[this.id]
+      delete dataCopy[this.id];
     }
 
     return ids
       .then(idList => {
         // Create a new query that re-queries all ids that
         // were originally changed
-        const selectParam = filters.$select ? { $select: filters.$select } : undefined
-        const findParams = Object.assign({}, params, { query: Object.assign({}, this.getIdsQuery(id, idList), selectParam) })
+        const selectParam = filters.$select ? { $select: filters.$select } : undefined;
+        const findParams = Object.assign({}, params, { query: Object.assign({}, this.getIdsQuery(id, idList), selectParam) });
 
-        utils.prepareData(q, dataCopy, METHODS)
+        utils.prepareData(q, dataCopy, METHODS);
 
-        q.set(dataCopy)
+        q.set(dataCopy);
 
         return utils.exec(q, params)
           .then(() => {
-            if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function') }
+            if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function'); }
 
             return params.query && params.query.$noSelect ? {} : this._find(findParams)
               .then(page => {
-                const items = page.data || page
+                const items = page.data || page;
 
                 if (id !== null) {
                   if (items.length === 1) {
-                    return items[0]
+                    return items[0];
                   } else {
-                    throw new errors.NotFound(`No record found for id '${id}'`)
+                    throw new errors.NotFound(`No record found for id '${id}'`);
                   }
                 } else if (!items.length) {
-                  throw new errors.NotFound(`No record found for id '${id}'`)
+                  throw new errors.NotFound(`No record found for id '${id}'`);
                 }
 
-                return items
-              })
-          })
+                return items;
+              });
+          });
       })
-      .catch(errorHandler)
+      .catch(errorHandler);
   }
 
   /**
@@ -747,73 +747,73 @@ class Service extends AdapterService {
    * @param params
    */
   _remove (id, params) {
-    const beforeHook = this.Model._properties.schema.before_delete
-    const afterHook = this.Model._properties.schema.after_delete
-    const hookOptions = utils.getHookOptions(params.query)
+    const beforeHook = this.Model._properties.schema.before_delete;
+    const afterHook = this.Model._properties.schema.after_delete;
+    const hookOptions = utils.getHookOptions(params.query);
 
-    if (beforeHook && beforeHook(params.query, hookOptions, id) === false) { throw new errors.BadRequest('Error in before_delete lifecycle function') }
+    if (beforeHook && beforeHook(params.query, hookOptions, id) === false) { throw new errors.BadRequest('Error in before_delete lifecycle function'); }
 
-    params.query = Object.assign({}, params.query)
+    params.query = Object.assign({}, params.query);
 
     // First fetch the record so that we can return
     // it when we delete it.
     if (id !== null) {
       if (Array.isArray(this.id)) {
-        params.query = Object.assign({}, params.query, this.getIdsQuery(id))
+        params.query = Object.assign({}, params.query, this.getIdsQuery(id));
       } else {
-        params.query[this.id] = id
+        params.query[this.id] = id;
       }
     }
 
-    const { query: queryParams } = this.filterQuery(params)
-    const query = this._createQuery('delete')
+    const { query: queryParams } = this.filterQuery(params);
+    const query = this._createQuery('delete');
 
-    utils.prepareIfCondition(id, queryParams, this.id)
-    this.objectify(query, queryParams)
+    utils.prepareIfCondition(id, queryParams, this.id);
+    this.objectify(query, queryParams);
 
     if (params.query && params.query.$noSelect) {
       return utils.exec(query, params)
         .then(() => {
-          if (afterHook && afterHook(params.query, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_delete lifecycle function') }
-          return {}
+          if (afterHook && afterHook(params.query, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_delete lifecycle function'); }
+          return {};
         })
-        .catch(errorHandler)
+        .catch(errorHandler);
     } else {
       return this._find(params)
         .then(page => {
-          const items = page.data || page
+          const items = page.data || page;
 
           return utils.exec(query, params)
             .then(() => {
-              if (afterHook && afterHook(params.query, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_delete lifecycle function') }
+              if (afterHook && afterHook(params.query, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_delete lifecycle function'); }
 
               if (id !== null) {
                 if (items.length === 1) {
-                  return items[0]
+                  return items[0];
                 } else {
-                  throw new errors.NotFound(`No record found for id '${id}'`)
+                  throw new errors.NotFound(`No record found for id '${id}'`);
                 }
               } else if (!items.length) {
-                throw new errors.NotFound(`No record found for id '${id}'`)
+                throw new errors.NotFound(`No record found for id '${id}'`);
               }
 
-              return items
-            })
+              return items;
+            });
         })
-        .catch(errorHandler)
+        .catch(errorHandler);
     }
   }
 }
 
 const init = options => {
-  return new Service(options)
-}
+  return new Service(options);
+};
 
 init.cassanknex = val => {
-  Service.cassanknex = val
-}
+  Service.cassanknex = val;
+};
 
-init.Service = Service
-init.ERROR = errorHandler.ERROR
+init.Service = Service;
+init.ERROR = errorHandler.ERROR;
 
-module.exports = init
+module.exports = init;

@@ -1,5 +1,5 @@
 module.exports = function (app) {
-  const models = app.get('models')
+  const models = app.get('models');
   const PeopleModel = models.loadSchema('People', {
     table_name: 'people',
     fields: {
@@ -10,7 +10,7 @@ module.exports = function (app) {
           required: true,
           validators: [
             {
-              validator: function (value) { return value !== 'forbidden' },
+              validator: function (value) { return value !== 'forbidden'; },
               message: '`forbidden` is a reserved word'
             }
           ]
@@ -54,16 +54,16 @@ module.exports = function (app) {
     ],
     filters: {
       old: builder => {
-        builder.where('age', '=', 32)
+        builder.where('age', '=', 32);
       }
     }
   }, function (err) {
-    if (err) throw err
-  })
+    if (err) throw err;
+  });
 
   PeopleModel.syncDB(function (err) {
-    if (err) throw err
-  })
+    if (err) throw err;
+  });
 
-  return PeopleModel
-}
+  return PeopleModel;
+};

@@ -1,8 +1,8 @@
-const createService = require('../src')
-const createModel = require('./people-mv.model')
+const createService = require('../src');
+const createModel = require('./people-mv.model');
 
 module.exports = function (app) {
-  const Model = createModel(app)
+  const Model = createModel(app);
 
   const options = {
     model: Model,
@@ -14,7 +14,7 @@ module.exports = function (app) {
       }
     ],
     events: ['testing']
-  }
+  };
 
-  app.use('/people-mv', createService(options))
-}
+  app.use('/people-mv', createService(options));
+};

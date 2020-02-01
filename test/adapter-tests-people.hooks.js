@@ -1,10 +1,10 @@
 const setAllowFiltering = () => {
   return async context => {
-    if (context.params.query) { context.params.query.$allowFiltering = true }
+    if (context.params.query) { context.params.query.$allowFiltering = true; }
 
-    return context
-  }
-}
+    return context;
+  };
+};
 
 module.exports = {
   before: {
@@ -36,4 +36,4 @@ module.exports = {
     patch: [],
     remove: []
   }
-}
+};

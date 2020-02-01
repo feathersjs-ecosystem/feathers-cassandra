@@ -336,6 +336,22 @@ app.service('/user-todos').get([1, 2])
 app.service('/user-todos').get({ userId: 1, todoId: 2 })
 ```  
 
+* **`materializedViews`** - (optional) array of materialized views to use when queries contains the same set of columns that constructs their compound PK.
+
+```js
+app.use('/players', service({
+  materializedViews: [
+    {
+      view: 'top_season_players',
+      keys: [
+        'season',
+        'score'
+      ]
+    }
+  ]
+})
+```  
+
 ## Complete Example
 
 Here's a complete example of a Feathers server with a `todos` Feathers-Cassandra service:

@@ -1,5 +1,5 @@
 module.exports = function (app) {
-  const models = app.get('models')
+  const models = app.get('models');
   const PeopleRoomModel = models.loadSchema('PeopleRoom', {
     table_name: 'people_rooms',
     fields: {
@@ -40,12 +40,12 @@ module.exports = function (app) {
       }
     }
   }, function (err) {
-    if (err) throw err
-  })
+    if (err) throw err;
+  });
 
   PeopleRoomModel.syncDB(function (err) {
-    if (err) throw err
-  })
+    if (err) throw err;
+  });
 
-  return PeopleRoomModel
-}
+  return PeopleRoomModel;
+};

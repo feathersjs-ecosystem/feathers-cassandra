@@ -1,5 +1,5 @@
 module.exports = function (app) {
-  const models = app.get('models')
+  const models = app.get('models');
   const PeopleRoomsCustomIdSeparatorModel = models.loadSchema('PeopleRoomsCustomIdSeparator', {
     table_name: 'people_rooms_custom_id_separator',
     fields: {
@@ -9,12 +9,12 @@ module.exports = function (app) {
     },
     key: ['people_id', 'room_id']
   }, function (err) {
-    if (err) throw err
-  })
+    if (err) throw err;
+  });
 
   PeopleRoomsCustomIdSeparatorModel.syncDB(function (err) {
-    if (err) throw err
-  })
+    if (err) throw err;
+  });
 
-  return PeopleRoomsCustomIdSeparatorModel
-}
+  return PeopleRoomsCustomIdSeparatorModel;
+};

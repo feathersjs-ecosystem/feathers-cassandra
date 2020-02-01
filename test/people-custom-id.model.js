@@ -1,5 +1,5 @@
 module.exports = function (app) {
-  const models = app.get('models')
+  const models = app.get('models');
   const PeopleCustomIdModel = models.loadSchema('PeopleCustomId', {
     table_name: 'people_custom_id',
     fields: {
@@ -37,12 +37,12 @@ module.exports = function (app) {
       }
     ]
   }, function (err) {
-    if (err) throw err
-  })
+    if (err) throw err;
+  });
 
   PeopleCustomIdModel.syncDB(function (err) {
-    if (err) throw err
-  })
+    if (err) throw err;
+  });
 
-  return PeopleCustomIdModel
-}
+  return PeopleCustomIdModel;
+};

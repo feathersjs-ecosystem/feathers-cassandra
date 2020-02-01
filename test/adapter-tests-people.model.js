@@ -1,5 +1,5 @@
 module.exports = function (app) {
-  const models = app.get('models')
+  const models = app.get('models');
   const AdapterTestsPeopleModel = models.loadSchema('AdapterTestsPeople', {
     table_name: 'adapter_tests_people',
     fields: {
@@ -31,16 +31,16 @@ module.exports = function (app) {
       }
     ],
     before_save: function (instance, options) {
-      instance.id = models.uuid().toString()
-      return true
+      instance.id = models.uuid().toString();
+      return true;
     }
   }, function (err) {
-    if (err) throw err
-  })
+    if (err) throw err;
+  });
 
   AdapterTestsPeopleModel.syncDB(function (err) {
-    if (err) throw err
-  })
+    if (err) throw err;
+  });
 
-  return AdapterTestsPeopleModel
-}
+  return AdapterTestsPeopleModel;
+};
