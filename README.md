@@ -4,7 +4,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/dekelev/feathers-cassandra/badge.svg?branch=master)](https://coveralls.io/github/dekelev/feathers-cassandra?branch=master)
 [![JavaScript Style Guide](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](https://standardjs.com/)
 [![Dependency Status](https://img.shields.io/david/dekelev/feathers-cassandra.svg)](https://david-dm.org/dekelev/feathers-cassandra)
-[![npm](https://img.shields.io/npm/v/feathers-cassandra.svg?maxAge=3600)](https://www.npmjs.com/package/feathers-cassandra)
+[![npm](https://img.shields.io/npm/v/feathers-cassandra.svg?maxAge=3600)](https://www.npmjs.com/package/feathers-cassandra) [![Greenkeeper badge](https://badges.greenkeeper.io/feathersjs-ecosystem/feathers-cassandra.svg)](https://greenkeeper.io/)
 
 [Feathers](https://feathersjs.com/) service adapter for Cassandra DB based on [Express-Cassandra](https://express-cassandra.readthedocs.io) ORM and [CassanKnex](https://github.com/azuqua/cassanknex) query builder
 
