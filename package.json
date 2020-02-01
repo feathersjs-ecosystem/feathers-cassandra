@@ -2,7 +2,7 @@
   "name": "feathers-cassandra",
   "description": "Feathers service adapter for Cassandra DB based on Express-Cassandra ORM and CassanKnex query builder",
   "version": "3.4.1",
-  "homepage": "https://github.com/dekelev/feathers-cassandra",
+  "homepage": "https://github.com/feathersjs-ecosystem/feathers-cassandra",
   "keywords": [
     "feathers",
     "feathersjs",
@@ -15,17 +15,23 @@
     "orm",
     "model"
   ],
-  "license": "MIT",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/feathersjs-ecosystem/feathers-cassandra/blob/master/LICENSE"
+    }
+  ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/dekelev/feathers-cassandra.git"
+    "url": "git://github.com/feathersjs-ecosystem/feathers-cassandra.git"
   },
   "author": {
-    "name": "Dekel Barzilay",
-    "email": "dekelev@gmail.com"
+    "name": "Feathers contributors",
+    "email": "hello@feathersjs.com",
+    "url": "https://feathersjs.com"
   },
   "bugs": {
-    "url": "https://github.com/dekelev/feathers-cassandra/issues"
+    "url": "https://github.com/feathersjs-ecosystem/feathers-cassandra/issues"
   },
   "engines": {
     "node": ">= 8"
