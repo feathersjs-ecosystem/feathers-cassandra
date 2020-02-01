@@ -814,5 +814,6 @@ init.cassanknex = val => {
 }
 
 init.Service = Service
+init.ERROR = errorHandler.ERROR
 
 module.exports = init

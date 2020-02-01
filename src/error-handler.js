@@ -1,5 +1,6 @@
 const errors = require('@feathersjs/errors')
 
+const ERROR = Symbol('feathers-knex/error')
 const ERROR_CODES = {
   serverError: 0x0000,
   protocolError: 0x000A,
@@ -22,72 +23,76 @@ const ERROR_CODES = {
 }
 
 module.exports = function errorHandler (error) {
+  const { message } = error
   let feathersError = error
 
   if (error instanceof TypeError) {
-    throw new errors.BadRequest(error)
-  }
+    feathersError = new errors.BadRequest(message)
+  } else if (!(error instanceof errors.FeathersError)) {
+    if (error.code !== undefined) { // CassanKnex errors
+      switch (error.code) {
+        case ERROR_CODES.syntaxError:
+        case ERROR_CODES.invalid:
+        case ERROR_CODES.truncateError:
+          feathersError = new errors.BadRequest(message)
+          break
 
-  // CassanKnex errors
-  if (error.code !== undefined && (!error.type || error.type !== 'FeathersError')) {
-    switch (error.code) {
-      case ERROR_CODES.syntaxError:
-      case ERROR_CODES.invalid:
-      case ERROR_CODES.truncateError:
-        feathersError = new errors.BadRequest(error)
-        break
+        case ERROR_CODES.badCredentials:
+          feathersError = new errors.NotAuthenticated(message)
+          break
 
-      case ERROR_CODES.badCredentials:
-        feathersError = new errors.NotAuthenticated(error)
-        break
+        case ERROR_CODES.unauthorized:
+          feathersError = new errors.Forbidden(message)
+          break
 
-      case ERROR_CODES.unauthorized:
-        feathersError = new errors.Forbidden(error)
-        break
+        case ERROR_CODES.functionFailure:
+          feathersError = new errors.MethodNotAllowed(message)
+          break
 
-      case ERROR_CODES.functionFailure:
-        feathersError = new errors.MethodNotAllowed(error)
-        break
+        case ERROR_CODES.protocolError:
+          feathersError = new errors.NotAcceptable(message)
+          break
 
-      case ERROR_CODES.protocolError:
-        feathersError = new errors.NotAcceptable(error)
-        break
+        case ERROR_CODES.readTimeout:
+        case ERROR_CODES.writeTimeout:
+          feathersError = new errors.Timeout(message)
+          break
 
-      case ERROR_CODES.readTimeout:
-      case ERROR_CODES.writeTimeout:
-        feathersError = new errors.Timeout(error)
-        break
+        case ERROR_CODES.alreadyExists:
+          feathersError = new errors.Conflict(message)
+          break
 
-      case ERROR_CODES.alreadyExists:
-        feathersError = new errors.Conflict(error)
-        break
+        case ERROR_CODES.overloaded:
+          feathersError = new errors.Unprocessable(message)
+          break
 
-      case ERROR_CODES.overloaded:
-        feathersError = new errors.Unprocessable(error)
-        break
+        case ERROR_CODES.configError:
+        case ERROR_CODES.serverError:
+        case ERROR_CODES.readFailure:
+        case ERROR_CODES.writeFailure:
+          feathersError = new errors.GeneralError(message)
+          break
 
-      case ERROR_CODES.configError:
-      case ERROR_CODES.serverError:
-      case ERROR_CODES.readFailure:
-      case ERROR_CODES.writeFailure:
-        feathersError = new errors.GeneralError(error)
-        break
+        case ERROR_CODES.unprepared:
+          feathersError = new errors.NotImplemented(message)
+          break
 
-      case ERROR_CODES.unprepared:
-        feathersError = new errors.NotImplemented(error)
-        break
+        case ERROR_CODES.isBootstrapping:
+        case ERROR_CODES.unavailableException:
+          feathersError = new errors.Unavailable(message)
+          break
 
-      case ERROR_CODES.isBootstrapping:
-      case ERROR_CODES.unavailableException:
-        feathersError = new errors.Unavailable(error)
-        break
-
-      default:
-        feathersError = new errors.GeneralError(error)
+        default:
+          feathersError = new errors.GeneralError(message)
+      }
+    } else {
+      feathersError = new errors.GeneralError(message)
     }
-
-    throw feathersError
   }
+
+  feathersError[ERROR] = error
 
   throw feathersError
 }
+
+module.exports.ERROR = ERROR

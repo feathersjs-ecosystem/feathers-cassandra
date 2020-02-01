@@ -505,7 +505,117 @@ Run the example with `node app` and go to [localhost:3030/todos](http://localhos
 
 You should see an empty array. That's because you don't have any Todos yet, but you now have full CRUD for your new todos service!
 
-## Migrating
+## DB migrations
+
+[Knex Migration CLI](http://knexjs.org/#Migrations) can also be used to manage DB migrations 
+and to [seed](http://knexjs.org/#Seeds) a table with mock data:
+
+Change `config.cassandra.ormOptions.migration` to `'safe'`.
+
+Create `cassanknex.js` file:
+```js
+const ExpressCassandra = require('express-cassandra');
+const config = require('config');
+let cassanknex = null;
+
+const getCassanknex = async () => {
+  return new Promise((resolve, reject) => {
+    if (cassanknex) {
+      resolve(cassanknex);
+
+      return;
+    }
+
+    const connectionInfo = config.cassandra;
+
+    if (connectionInfo.clientOptions.queryOptions.consistency)
+      connectionInfo.clientOptions.queryOptions.consistency = ExpressCassandra.consistencies[connectionInfo.clientOptions.queryOptions.consistency];
+
+    connectionInfo.connection = connectionInfo.clientOptions;
+
+    try {
+      cassanknex = require('cassanknex')(connectionInfo);
+
+      cassanknex.on('ready', function (err) {
+        if (err) {
+          reject(err);
+
+          return;
+        }
+
+        resolve(cassanknex);
+      });
+    } catch (err) {
+      reject(err);
+    }
+  });
+};
+
+module.exports = {
+  getCassanknex,
+};
+```
+
+Use it inside a Knex migration file:
+```js
+const { getCassanknex } = require('../cassanknex');
+
+exports.up = () => {
+  return new Promise(async (resolve, reject) => {
+    const cassanknex = await getCassanknex();
+
+    cassanknex('example').createColumnFamilyIfNotExists('table')
+      .uuid('id')
+      .text('data')
+      .primary('id')
+      .exec((err, result) => {
+        if (err) {
+          reject(err);
+
+          return;
+        }
+
+        resolve();
+      });
+  });
+};
+
+exports.down = () => {
+  return new Promise(async (resolve, reject) => {
+    const cassanknex = await getCassanknex();
+
+    cassanknex('example').dropColumnFamilyIfExists('table')
+      .exec((err, result) => {
+        if (err) {
+          reject(err);
+
+          return;
+        }
+
+        resolve();
+      });
+  });
+};
+```
+
+## Error handling
+
+As of version 3.4.0, `feathers-cassandra` only throws [Feathers Errors](https://docs.feathersjs.com/api/errors.html) with the message.  
+On the server, the original error can be retrieved through a secure symbol via  `error[require('feathers-cassandra').ERROR]`.
+
+```js
+const { ERROR } = require('feathers-cassandra');
+
+try {
+  await cassandraService.doSomething();
+} catch (error) {
+  // error is a FeathersError with just the message
+  // Safely retrieve the original error
+  const originalError = error[ERROR];
+}
+```
+
+## Migrating to `feathers-cassandra` v2
  
 `feathers-cassandra` 2.0.0 comes with important security and usability updates.
 

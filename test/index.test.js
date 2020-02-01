@@ -143,7 +143,19 @@ describe('Feathers Cassandra service', () => {
     it('no error code', () => {
       const error = new Error('Unknown Error')
       expect(errorHandler.bind(null, error)).to.throw('Unknown Error')
-      expect(errorHandler.bind(null, error)).to.not.throw(errors.GeneralError)
+      expect(errorHandler.bind(null, error)).to.throw(errors.GeneralError)
+    })
+
+    it('Get original error', () => {
+      const error = new Error()
+      error.code = 'SQLITE_ERROR'
+      error.errno = 999
+
+      try {
+        errorHandler(error)
+      } catch (err) {
+        expect(err[service.ERROR]).to.deep.equal(error)
+      }
     })
 
     it('Unknown error code', () => {
