@@ -1,5 +1,20 @@
 # Changelog
 
+## [v3.4.3](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.4.3) (2020-03-14)
+
+[Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.4.2...v3.4.3)
+
+**Closed issues:**
+
+- An in-range update of @feathersjs/adapter-commons is breaking the build 🚨 [\#7](https://github.com/feathersjs-ecosystem/feathers-cassandra/issues/7)
+- Moving into feathers-ecosystem organization [\#4](https://github.com/feathersjs-ecosystem/feathers-cassandra/issues/4)
+
+**Merged pull requests:**
+
+- Updated project dependencies [\#9](https://github.com/feathersjs-ecosystem/feathers-cassandra/pull/9) ([dekelev](https://github.com/dekelev))
+- Update dtslint to the latest version 🚀 [\#6](https://github.com/feathersjs-ecosystem/feathers-cassandra/pull/6) ([greenkeeper[bot]](https://github.com/apps/greenkeeper))
+- Add Greenkeeper badge 🌴 [\#5](https://github.com/feathersjs-ecosystem/feathers-cassandra/pull/5) ([greenkeeper[bot]](https://github.com/apps/greenkeeper))
+
 ## [v3.4.2](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.4.2) (2020-02-01)
 
 [Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.4.1...v3.4.2)
