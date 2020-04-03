@@ -483,17 +483,19 @@ class Service extends AdapterService {
 
           if (params.query && params.query.$noSelect) { return data; }
 
-          let id = null;
+          let id;
 
           if (Array.isArray(this.id)) {
             id = [];
 
             for (const idKey of this.id) {
-              id.push(typeof data[idKey] !== 'undefined' ? data[idKey] : row[idKey]);
+              id.push(data[idKey]);
             }
           } else {
-            id = typeof data[this.id] !== 'undefined' ? data[this.id] : row[this.id];
+            id = data[this.id];
           }
+
+          if (!id || (Array.isArray(id) && !id.length)) { return data; }
 
           return this._get(id, params);
         })
