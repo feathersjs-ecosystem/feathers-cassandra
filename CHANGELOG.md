@@ -1,5 +1,9 @@
 # Changelog
 
+## [v3.4.6](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.4.6) (2020-04-24)
+
+[Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.4.5...v3.4.6)
+
 ## [v3.4.5](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.4.5) (2020-04-03)
 
 [Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.4.4...v3.4.5)
