@@ -1,5 +1,26 @@
 # Changelog
 
+## [v3.4.8](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.4.8) (2020-05-10)
+
+[Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.4.7...v3.4.8)
+
+## [v3.4.7](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.4.7) (2020-05-10)
+
+[Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.4.6...v3.4.7)
+
+**Closed issues:**
+
+- An in-range update of dtslint is breaking the build 🚨 [\#14](https://github.com/feathersjs-ecosystem/feathers-cassandra/issues/14)
+- An in-range update of coveralls is breaking the build 🚨 [\#13](https://github.com/feathersjs-ecosystem/feathers-cassandra/issues/13)
+- An in-range update of @feathersjs/feathers is breaking the build 🚨 [\#12](https://github.com/feathersjs-ecosystem/feathers-cassandra/issues/12)
+- An in-range update of @feathersjs/express is breaking the build 🚨 [\#11](https://github.com/feathersjs-ecosystem/feathers-cassandra/issues/11)
+- An in-range update of @feathersjs/errors is breaking the build 🚨 [\#10](https://github.com/feathersjs-ecosystem/feathers-cassandra/issues/10)
+
+**Merged pull requests:**
+
+- Greenkeeper/dtslint 3.5.0 [\#16](https://github.com/feathersjs-ecosystem/feathers-cassandra/pull/16) ([dekelev](https://github.com/dekelev))
+- Greenkeeper/coveralls 3.1.0 [\#15](https://github.com/feathersjs-ecosystem/feathers-cassandra/pull/15) ([dekelev](https://github.com/dekelev))
+
 ## [v3.4.6](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.4.6) (2020-04-24)
 
 [Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.4.5...v3.4.6)
