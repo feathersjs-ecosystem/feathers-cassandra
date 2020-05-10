@@ -646,6 +646,6 @@ The following breaking changes have been introduced:
 
 ## License
 
-Copyright © 2019
+Copyright © 2020
 
 Licensed under the [MIT license](LICENSE).
