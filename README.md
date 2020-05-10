@@ -17,7 +17,7 @@ npm install --save express-cassandra
 npm install --save cassanknex
 ```
 
-### [Feathers CLI](https://github.com/feathersjs/feathers/tree/master/packages/cli)
+### [Feathers CLI](https://github.com/feathersjs/cli)
 
 Use `feathers generate service` command to generate a new `Cassandra` service.
 
@@ -79,8 +79,8 @@ $in
 | Operator | Native Operator | Description | Example |
 |:---: | :---: | --- | --- |
 | `$token` | `TOKEN` | Token query on primary keys. can be used for pagination | Single key: `$token: { id: { $gt: 1 } }` Multiple keys: `$token: { $keys: ['id', 'time'], $condition: { $gt: [1, 2] } }`  |
-| `$minTimeuuid` | `minTimeuuid` | Query on `timeuuid` column given a time component. [read more](http://cassandra.apache.org/doc/4.0/cql/functions.html#mintimeuuid-and-maxtimeuuid) | `$minTimeuuid: { timeuuid: { $lt: '2013-02-02 10:00+0000' } }` |
-| `$maxTimeuuid` | `maxTimeuuid` | Query on `timeuuid` column given a time component. [read more](http://cassandra.apache.org/doc/4.0/cql/functions.html#mintimeuuid-and-maxtimeuuid) | `$maxTimeuuid: { timeuuid: { $gt: '2013-01-01 00:05+0000' } }` |
+| `$minTimeuuid` | `minTimeuuid` | Query on `timeuuid` column given a time component. [read more](https://cassandra.apache.org/doc/latest/cql/functions.html#mintimeuuid-and-maxtimeuuid) | `$minTimeuuid: { timeuuid: { $lt: '2013-02-02 10:00+0000' } }` |
+| `$maxTimeuuid` | `maxTimeuuid` | Query on `timeuuid` column given a time component. [read more](https://cassandra.apache.org/doc/latest/cql/functions.html#mintimeuuid-and-maxtimeuuid) | `$maxTimeuuid: { timeuuid: { $gt: '2013-01-01 00:05+0000' } }` |
 | `$contains` | `CONTAINS` | Search in indexed list, set or map | `colors: { $contains: 'blue' }` |
 | `$containsKey` | `CONTAINS KEY` | Search in indexed map | `colors: { $containsKey: 'dark' }` |
 | `$if` | `IF` | Condition that must return TRUE for the update to succeed. Will be used automatically when an update, patch or remove request query by id with additional query conditions | `$if: { name: 'John' }` |
@@ -108,9 +108,9 @@ $in
 | `$increment` | `+` | Increments a counter | `days: { $increment: 2 }` |
 | `$decrement` | `-` | Decrements a counter | `days: { $decrement: 2 }` |
 
-### Passing Cassandra [queryOptions](https://docs.datastax.com/en/developer/nodejs-driver/3.3/api/type.QueryOptions/)
+### Passing Cassandra [queryOptions](https://docs.datastax.com/en/developer/nodejs-driver/4.5/api/type.QueryOptions/)
 
-Set `params.queryOptions` to override options per query, like [setting a different consistency level for a single query](http://datastax.github.io/nodejs-driver/getting-started/#setting-the-consistency-level).  
+Set `params.queryOptions` to override options per query, like [setting a different consistency level for a single query](https://docs.datastax.com/en/developer/nodejs-driver/4.5/getting-started/#setting-the-consistency-level).  
 
 ### Materialized Views
 
@@ -128,7 +128,7 @@ Filter functions runs in get & find requests when specified in the `query.$filte
 
 ### Cassandra
 
-Set Cassandra init options as defined in [Cassandra](https://docs.datastax.com/en/developer/nodejs-driver/3.5/api/type.ClientOptions/) & [Express-Cassandra](https://express-cassandra.readthedocs.io/en/latest/usage/#explanations-for-the-options-used-to-initialize):
+Set Cassandra init options as defined in [Cassandra](https://docs.datastax.com/en/developer/nodejs-driver/4.5/api/type.ClientOptions/) & [Express-Cassandra](https://express-cassandra.readthedocs.io/en/latest/usage/#explanations-for-the-options-used-to-initialize):
 
 config/defaults.json
 ```json
@@ -636,7 +636,7 @@ try {
  
 `feathers-cassandra` 2.0.0 comes with important security and usability updates.
 
-> __Important:__ For general migration information to the new database adapter functionality see [crow.docs.feathersjs.com/migrating.html#database-adapters](https://crow.docs.feathersjs.com/migrating.html#database-adapters).
+> __Important:__ For general migration information to the new database adapter functionality see [docs.feathersjs.com/guides/migrating.html#database-adapters](https://docs.feathersjs.com/guides/migrating.html#database-adapters).
 
 The following breaking changes have been introduced:
 
