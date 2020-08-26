@@ -69,14 +69,11 @@ class Service extends AdapterService {
       throw new errors.GeneralError('You must provide an ExpressCassandra Model');
     }
 
-    const id = flatten(options.model._properties.schema.key);
-
     const whitelist = Object.values(OPERATORS).concat(options.whitelist || []);
+    let id = flatten(options.model._properties.schema.key);
+    id = id.length === 1 ? id[0] : id;
 
-    super(Object.assign({
-      id: id.length === 1 ? id[0] : id,
-      whitelist
-    }, options));
+    super(Object.assign({ id }, options, { whitelist }));
 
     this.idSeparator = options.idSeparator || ',';
     this.keyspace = options.model.get_keyspace_name();
