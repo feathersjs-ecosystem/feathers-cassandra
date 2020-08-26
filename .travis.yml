@@ -1,8 +1,8 @@
 dist: trusty
 language: node_js
 node_js:
-  - 'node'
-  - '8'
+  - '12'
+  - '10'
 sudo: required
 services:
   - cassandra
