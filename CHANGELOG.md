@@ -1,10 +1,16 @@
 # Changelog
 
-[Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.5.0...HEAD)
+## [v3.5.2](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.5.2) (2020-10-22)
+
+[Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.5.1...v3.5.2)
 
 **Closed issues:**
 
 - TypeScript definitions missing from npm [\#18](https://github.com/feathersjs-ecosystem/feathers-cassandra/issues/18)
+
+## [v3.5.1](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.5.1) (2020-09-10)
+
+[Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.5.0...v3.5.1)
 
 ## [v3.5.0](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.5.0) (2020-08-26)
 
