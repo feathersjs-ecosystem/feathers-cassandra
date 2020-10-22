@@ -15,7 +15,7 @@
     "orm",
     "model"
   ],
-  "licenses": [
+  "license": [
     {
       "type": "MIT",
       "url": "https://github.com/feathersjs-ecosystem/feathers-cassandra/blob/master/LICENSE"
