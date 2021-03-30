@@ -1,5 +1,13 @@
 # Changelog
 
+## [v3.5.4](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.5.4) (2021-03-30)
+
+[Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.5.3...v3.5.4)
+
+**Merged pull requests:**
+
+- Bump y18n from 4.0.0 to 4.0.1 [\#21](https://github.com/feathersjs-ecosystem/feathers-cassandra/pull/21) ([dependabot[bot]](https://github.com/apps/dependabot))
+
 ## [v3.5.3](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.5.3) (2020-10-22)
 
 [Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.5.2...v3.5.3)
