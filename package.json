@@ -62,20 +62,20 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@feathersjs/adapter-commons": "^4.5.7",
-    "@feathersjs/errors": "^4.5.9",
+    "@feathersjs/adapter-commons": "^4.5.11",
+    "@feathersjs/errors": "^4.5.11",
     "arr-flatten": "^1.1.0",
     "lodash.isequal": "^4.5.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.12.1",
-    "@babel/core": "^7.12.3",
-    "@babel/node": "^7.12.1",
-    "@babel/preset-env": "^7.12.1",
-    "@babel/register": "^7.12.1",
-    "@feathersjs/adapter-tests": "^4.5.4",
-    "@feathersjs/express": "^4.5.9",
-    "@feathersjs/feathers": "^4.5.9",
+    "@babel/cli": "^7.13.14",
+    "@babel/core": "^7.13.14",
+    "@babel/node": "^7.13.13",
+    "@babel/preset-env": "^7.13.12",
+    "@babel/register": "^7.13.14",
+    "@feathersjs/adapter-tests": "^4.5.11",
+    "@feathersjs/express": "^4.5.11",
+    "@feathersjs/feathers": "^4.5.11",
     "await-sleep": "0.0.1",
     "babel-eslint": "^10.1.0",
     "babel-plugin-add-module-exports": "^1.0.4",
@@ -83,16 +83,16 @@
     "babel-plugin-transform-object-assign": "^6.22.0",
     "body-parser": "^1.19.0",
     "cassanknex": "^1.20.3",
-    "chai": "^4.2.0",
+    "chai": "^4.3.4",
     "coveralls": "^3.1.0",
-    "dtslint": "^4.0.4",
+    "dtslint": "^4.0.8",
     "express-cassandra": "^2.5.0",
     "feathers-service-tests-cassandra": "^1.0.1",
-    "mocha": "^8.2.0",
+    "mocha": "^8.3.2",
     "nyc": "^15.1.0",
     "rimraf": "^3.0.2",
-    "semistandard": "^14.2.3",
-    "typescript": "^4.0.3"
+    "semistandard": "^16.0.0",
+    "typescript": "^4.2.3"
   },
   "peerDependencies": {
     "express-cassandra": "*"

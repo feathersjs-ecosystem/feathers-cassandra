@@ -719,22 +719,24 @@ class Service extends AdapterService {
           .then(() => {
             if (afterHook && afterHook(params.query, data, hookOptions, id) === false) { throw new errors.BadRequest('Error in after_update lifecycle function'); }
 
-            return params.query && params.query.$noSelect ? {} : this._find(findParams)
-              .then(page => {
-                const items = page.data || page;
+            return params.query && params.query.$noSelect
+              ? {}
+              : this._find(findParams)
+                .then(page => {
+                  const items = page.data || page;
 
-                if (id !== null) {
-                  if (items.length === 1) {
-                    return items[0];
-                  } else {
+                  if (id !== null) {
+                    if (items.length === 1) {
+                      return items[0];
+                    } else {
+                      throw new errors.NotFound(`No record found for id '${id}'`);
+                    }
+                  } else if (!items.length) {
                     throw new errors.NotFound(`No record found for id '${id}'`);
                   }
-                } else if (!items.length) {
-                  throw new errors.NotFound(`No record found for id '${id}'`);
-                }
 
-                return items;
-              });
+                  return items;
+                });
           });
       })
       .catch(errorHandler);
