@@ -331,7 +331,7 @@ class Service extends AdapterService {
    * `find` service function for FeathersCassandra.
    * @param params
    */
-  _find (params) {
+  _find (params = {}) {
     const find = (params, count, filters, query) => {
       let allowFiltering = false;
       let filtersQueue = null;
@@ -420,7 +420,7 @@ class Service extends AdapterService {
     return result;
   }
 
-  _get (id, params) {
+  _get (id, params = {}) {
     const query = Object.assign({}, params.query, this.getIdsQuery(id));
 
     return this._find(Object.assign({}, params, { query }))
@@ -440,7 +440,7 @@ class Service extends AdapterService {
    * @param {object} data
    * @param {object} params
    */
-  _create (data, params) {
+  _create (data, params = {}) {
     const create = (data, params, hookOptions, batch = false) => {
       this.validate(data);
       utils.setTimestampFields(data, true, true, this.modelOptions.timestamps);
@@ -530,7 +530,7 @@ class Service extends AdapterService {
    * @param data
    * @param params
    */
-  _update (id, data, params) {
+  _update (id, data, params = {}) {
     const update = (id, data, params, oldData) => {
       const fields = Object.keys(oldData || this.fields);
       const createdAtField = this.modelOptions.timestamps && this.modelOptions.timestamps.createdAt;
@@ -647,7 +647,7 @@ class Service extends AdapterService {
    * @param data
    * @param params
    */
-  _patch (id, data, params) {
+  _patch (id, data, params = {}) {
     this.validate(data, 'patch');
     utils.setTimestampFields(data, true, false, this.modelOptions.timestamps);
     utils.setVersionField(data, this.modelOptions.versions);
@@ -747,7 +747,7 @@ class Service extends AdapterService {
    * @param id
    * @param params
    */
-  _remove (id, params) {
+  _remove (id, params = {}) {
     const beforeHook = this.Model._properties.schema.before_delete;
     const afterHook = this.Model._properties.schema.after_delete;
     const hookOptions = utils.getHookOptions(params.query);
