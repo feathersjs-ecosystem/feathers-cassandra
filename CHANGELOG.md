@@ -1,5 +1,15 @@
 # Changelog
 
+[Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.5.6...HEAD)
+
+**Merged pull requests:**
+
+- Bump lodash from 4.17.19 to 4.17.21 [\#22](https://github.com/feathersjs-ecosystem/feathers-cassandra/pull/22) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v3.5.6](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.5.6) (2021-05-08)
+
+[Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.5.5...v3.5.6)
+
 ## [v3.5.5](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.5.5) (2021-04-25)
 
 [Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.5.4...v3.5.5)
