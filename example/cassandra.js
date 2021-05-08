@@ -5,6 +5,7 @@ module.exports = function (app) {
   const models = ExpressCassandra.createClient({
     clientOptions: {
       contactPoints: ['127.0.0.1'],
+      localDataCenter: 'datacenter1',
       protocolOptions: { port: 9042 },
       keyspace: 'test',
       queryOptions: { consistency: ExpressCassandra.consistencies.one }
