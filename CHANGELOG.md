@@ -1,5 +1,19 @@
 # Changelog
 
+[Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.5.8...HEAD)
+
+**Merged pull requests:**
+
+- Bump ajv from 6.12.2 to 6.12.6 [\#23](https://github.com/feathersjs-ecosystem/feathers-cassandra/pull/23) ([dependabot[bot]](https://github.com/apps/dependabot))
+
+## [v3.5.8](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.5.8) (2022-02-12)
+
+[Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.5.7...v3.5.8)
+
+## [v3.5.7](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.5.7) (2022-01-15)
+
+[Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.5.6...v3.5.7)
+
 ## [v3.5.6](https://github.com/feathersjs-ecosystem/feathers-cassandra/tree/v3.5.6) (2021-05-08)
 
 [Full Changelog](https://github.com/feathersjs-ecosystem/feathers-cassandra/compare/v3.5.5...v3.5.6)
